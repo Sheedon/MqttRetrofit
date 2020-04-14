@@ -1,5 +1,7 @@
 package org.sheedon.mqtt.retrofit;
 
+import android.text.TextUtils;
+
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
@@ -111,6 +113,9 @@ public class RequestBuilder {
             }
         }
 
+        if(body == null || TextUtils.isEmpty(body.getData())){
+            return "";
+        }
         return body.getData().replaceAll("\\\\\"", "");
     }
 }

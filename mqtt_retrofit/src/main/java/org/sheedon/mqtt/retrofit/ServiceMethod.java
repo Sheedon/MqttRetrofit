@@ -35,7 +35,7 @@ import java.lang.reflect.Type;
  */
 final class ServiceMethod<R, T> {
 
-    final org.sheedon.mqtt.Call.Factory callFactory;
+    final org.sheedon.mqtt.MQTTFactory mqttFactory;
     final CallAdapter<R, T> callAdapter;
 
     private final Converter<ResponseBody, R> responseConverter;
@@ -47,7 +47,7 @@ final class ServiceMethod<R, T> {
     private final Gson gson;
 
     ServiceMethod(Builder<R, T> builder) {
-        this.callFactory = builder.retrofit.callFactory();
+        this.mqttFactory = builder.retrofit.mqttFactory();
         this.gson = builder.retrofit.getGson();
         this.callAdapter = builder.callAdapter;
         this.responseConverter = builder.responseConverter;
@@ -79,6 +79,10 @@ final class ServiceMethod<R, T> {
     }
 
     T adapt(Call<R> call) {
+        return callAdapter.adapt(call);
+    }
+
+    T adapt(Observable<R> call) {
         return callAdapter.adapt(call);
     }
 

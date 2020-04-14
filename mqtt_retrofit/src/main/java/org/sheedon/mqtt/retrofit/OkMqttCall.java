@@ -78,7 +78,7 @@ final class OkMqttCall<T> implements Call<T> {
     }
 
     @Override
-    public void enqueue(final Callback callback) {
+    public void enqueue(final Callback.Call callback) {
 
         org.sheedon.mqtt.Call call;
         Throwable failure;
@@ -159,7 +159,7 @@ final class OkMqttCall<T> implements Call<T> {
      * @param t         错误
      * @param isSuccess 是否成功
      */
-    private void dealWithCallback(Callback callback, Call<T> call, Response<T> response, Throwable t, boolean isSuccess) {
+    private void dealWithCallback(Callback.Call callback, Call<T> call, Response<T> response, Throwable t, boolean isSuccess) {
 
         if (callback == null)
             return;
@@ -174,9 +174,9 @@ final class OkMqttCall<T> implements Call<T> {
 
     private org.sheedon.mqtt.Call createRawCall() throws IOException {
         Request request = serviceMethod.toRequest(args);
-        org.sheedon.mqtt.Call call = serviceMethod.callFactory.newCall(request);
+        org.sheedon.mqtt.Call call = serviceMethod.mqttFactory.newCall(request);
         if (call == null) {
-            throw new NullPointerException("Call.Factory returned null.");
+            throw new NullPointerException("MqttFactory returned null.");
         }
         return call;
     }
