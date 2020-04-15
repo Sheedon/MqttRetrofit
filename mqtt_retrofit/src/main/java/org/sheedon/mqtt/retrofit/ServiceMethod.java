@@ -173,6 +173,8 @@ final class ServiceMethod<R, T> {
                 throw methodError("Missing topic.");
             } else if (topic == null || topic.equals("")) {
                 topic = baseTopic;
+            } else {
+                topic = baseTopic + topic;
             }
 
             return new ServiceMethod<>(this);
