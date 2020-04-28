@@ -80,13 +80,10 @@ public class RequestBuilder {
                     "Base Topic is Null");
         }
 
-        byte[] payload = mqttMessage.getPayload();
-        if (payload.length == 0) {
-            payload = getRequestBody().getBytes();
+        byte[] payload = getRequestBody().getBytes();
 
-            if (payload.length > 0) {
-                mqttMessage.setPayload(payload);
-            }
+        if (payload.length > 0) {
+            mqttMessage.setPayload(payload);
         }
 
 
@@ -96,6 +93,7 @@ public class RequestBuilder {
                 .delayMilliSecond(bindCallback.getDelayMilliSecond())
                 .backName(bindCallback.getBackName())
                 .build();
+
     }
 
     /**
@@ -113,7 +111,7 @@ public class RequestBuilder {
             }
         }
 
-        if(body == null || TextUtils.isEmpty(body.getData())){
+        if (body == null || TextUtils.isEmpty(body.getData())) {
             return "";
         }
         return body.getData().replaceAll("\\\\\"", "");
