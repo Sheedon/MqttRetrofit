@@ -20,4 +20,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface TOPIC {
 
     String value() default "";
+
+    boolean isReplace() default false;
 }

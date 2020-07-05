@@ -101,6 +101,7 @@ final class ServiceMethod<R, T> {
         final Type[] parameterTypes;
 
         String topic;
+        boolean isReplace;
         final String baseTopic;
         final MqttMessage mqttMessage;
         final BindCallback bindCallback;
@@ -173,7 +174,7 @@ final class ServiceMethod<R, T> {
                 throw methodError("Missing topic.");
             } else if (topic == null || topic.equals("")) {
                 topic = baseTopic;
-            } else {
+            } else if(!isReplace){
                 topic = baseTopic + topic;
             }
 
@@ -211,6 +212,7 @@ final class ServiceMethod<R, T> {
         private void parseMethodAnnotation(Annotation annotation) {
             if (annotation instanceof TOPIC) {
                 topic = ((TOPIC) annotation).value();
+                isReplace = ((TOPIC) annotation).isReplace();
             } else if (annotation instanceof PAYLOAD) {
                 gotPayload = true;
                 mqttMessage.setPayload(((PAYLOAD) annotation).value().getBytes());
