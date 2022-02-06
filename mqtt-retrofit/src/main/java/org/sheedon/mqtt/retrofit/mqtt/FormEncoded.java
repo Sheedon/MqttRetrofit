@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 表格编码
- * 例如
+ * Enable Field
+ * For example
  * @FormEncoded
  * Call<> getManagerList(@Field("type") String type,
  *                       @Field("upStartTime") String upStartTime);

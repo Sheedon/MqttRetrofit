@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 方法参数内容的主题
+ * To dynamically configure the Topic of the mqtt request according to the Theme
  * Call<> getManagerList(@Theme() String topic, @Body UserSubmitModel body);
  * <p>
- * Theme 替换 TOPIC 内容
+ * Theme replace TOPIC
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com

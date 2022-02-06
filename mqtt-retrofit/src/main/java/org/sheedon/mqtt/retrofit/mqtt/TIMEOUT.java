@@ -26,8 +26,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Timeout time, the default unit is seconds, the unit type can be configured
  * For example：
- *
  * @TIMEOUT(5) Call<> getManagerList();
+ *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 12:47

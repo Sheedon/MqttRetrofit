@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 请求内容
+ * request body by mqtt payload
  * 例如 Call<> getManagerList(@Body UserSubmitModel body);
  *
  * @Author: sheedon

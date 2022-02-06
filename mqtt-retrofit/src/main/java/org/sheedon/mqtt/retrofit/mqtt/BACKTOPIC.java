@@ -24,9 +24,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * callback topic
- * 例如：
- *
+ * For example：
  * @BACKTOPIC("xxx") Call<> getManagerList();
+ *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 12:48

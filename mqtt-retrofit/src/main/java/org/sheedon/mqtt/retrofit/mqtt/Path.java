@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 路径内容,替换Topic中指定的内容
+ * Path content, replace the content specified in TOPIC
  * @TOPIC("yh_classify/device/recyclable/data/{deviceId}}")
  * Call<> getManagerList(@Path("deviceId") String deviceId, @Field("type") String type,
  *                       @Field("upStartTime") String upStartTime);
  *
- * path中的deviceId替换TOPIC中的deviceId
+ * The deviceId in path replaces the deviceId in TOPIC
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -38,6 +38,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target(PARAMETER)
 public @interface Path {
+
+    /**
+     * Used to replace the field corresponding to the current value in TOPIC
+     */
     String value();
 
     /**

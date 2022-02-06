@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 区域，用于设置内容的key
+ * mqtt payload field, the key used to set the content
  *
  * 例如
  * Call<> getManagerList(@Field("type") String type,
