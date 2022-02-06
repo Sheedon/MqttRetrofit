@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * mqtt消息内容
+ * mqtt message payload
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -34,5 +34,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface PAYLOAD {
 
+    /**
+     * message payload content，example: value = "{\"name\":\"张三\",\"age\":15}"
+     */
     String value() default "";
 }

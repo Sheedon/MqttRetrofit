@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,26 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 超时时间 毫秒
+ * callback topic
  * 例如：
- * @DELAYMILLISECOND(5000)
- * Call<> getManagerList();
  *
+ * @BACKTOPIC("xxx") Call<> getManagerList();
  * @Author: sheedon
  * @Email: sheedonsun@163.com
- * @Date: 2020/2/23 12:47
+ * @Date: 2020/2/23 12:48
  */
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface DELAYMILLISECOND {
-    int value() default -1;
+public @interface BACKTOPIC {
+
+    /**
+     * The receiving topic bound to a message feedback operation
+     * should not only point to the topic subscribed to by mqtt,
+     * but also point to a message type field on the business
+     * For example: the request type is test,
+     * and the bound request result is test_ack,
+     * then the value here should be filled with test_ack
+     */
+    String value();
 }

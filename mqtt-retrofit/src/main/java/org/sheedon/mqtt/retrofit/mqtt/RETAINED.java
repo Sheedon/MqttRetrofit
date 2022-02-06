@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * mqtt 是否保留
+ * mqtt whether to retained
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -34,5 +34,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RETAINED {
 
+    /**
+     * Whether the mqtt message is retained,
+     * value == true, the request data will be retained in the mqtt service
+     */
     boolean value() default false;
 }

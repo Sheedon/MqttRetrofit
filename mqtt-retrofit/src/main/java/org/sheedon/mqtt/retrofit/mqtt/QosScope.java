@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,26 @@
  */
 package org.sheedon.mqtt.retrofit.mqtt;
 
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
+
+import androidx.annotation.IntRange;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 /**
- * 反馈名
- * 例如：
- * @BACKNAME("xxx")
- * Call<> getManagerList();
+ * message quality scope
+ * mqtt qos scope 0,1,2
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
- * @Date: 2020/2/23 12:48
+ * @Date: 2022/2/6 3:42 下午
  */
 @Documented
 @Target(METHOD)
-@Retention(RUNTIME)
-public @interface BACKNAME {
-    String value();
+@Retention(SOURCE)
+@IntRange(from = 0, to = 2)
+public @interface QosScope {
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2020 Sheedon.
+/*
+ * Copyright (C) 2022 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * mqtt 服务质量
+ * mqtt quality of service
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -33,5 +33,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(METHOD)
 @Retention(RUNTIME)
 public @interface QOS {
-    int value() default 1;
+
+    /**
+     * mqtt quality of service value in the range of 0 to 2
+     */
+    @QosScope
+    int value() default 0;
 }
