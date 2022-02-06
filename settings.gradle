@@ -1,3 +1,3 @@
 rootProject.name='MqttRetrofit'
 include ':app'
-include ':mqtt_retrofit'
+include ':mqtt-retrofit'
