@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,8 @@ import org.sheedon.mqtt.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import kotlin.Unit;
+
 /**
  * 创建基础转化工厂类
  *
@@ -29,6 +31,11 @@ import java.lang.reflect.Type;
  * @Date: 2020/2/24 15:19
  */
 public final class BuiltInConverters extends Converter.Factory {
+    /**
+     * Not volatile because we don't mind multiple threads discovering this.
+     */
+    private boolean checkForKotlinUnit = true;
+
     @Override
     public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
                                                             Retrofit retrofit) {
@@ -37,6 +44,15 @@ public final class BuiltInConverters extends Converter.Factory {
         }
         if (type == Void.class) {
             return VoidResponseBodyConverter.INSTANCE;
+        }
+        if (checkForKotlinUnit) {
+            try {
+                if (type == Unit.class) {
+                    return UnitResponseBodyConverter.INSTANCE;
+                }
+            } catch (NoClassDefFoundError ignored) {
+                checkForKotlinUnit = false;
+            }
         }
         return null;
     }
@@ -55,7 +71,6 @@ public final class BuiltInConverters extends Converter.Factory {
 
         @Override
         public Void convert(ResponseBody value) {
-            value.close();
             return null;
         }
     }
@@ -69,18 +84,23 @@ public final class BuiltInConverters extends Converter.Factory {
         }
     }
 
+    static final class UnitResponseBodyConverter implements Converter<ResponseBody, Unit> {
+        static final UnitResponseBodyConverter INSTANCE = new UnitResponseBodyConverter();
+
+        @Override
+        public Unit convert(ResponseBody value) {
+            return Unit.INSTANCE;
+        }
+    }
+
     static final class BufferingResponseBodyConverter
             implements Converter<ResponseBody, ResponseBody> {
         static final BufferingResponseBodyConverter INSTANCE = new BufferingResponseBodyConverter();
 
         @Override
         public ResponseBody convert(ResponseBody value) {
-            try {
-                // Buffer the entire body to avoid future I/O.
-                return value;
-            } finally {
-                value.close();
-            }
+            // Buffer the entire body to avoid future I/O.
+            return value;
         }
     }
 
