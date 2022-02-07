@@ -19,6 +19,7 @@ package org.sheedon.mqtt.retrofit;
 import androidx.annotation.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -44,6 +45,14 @@ public interface CallAdapter<R, T> {
         public abstract @Nullable
         CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
                               Retrofit retrofit);
+
+        /**
+         * Extract the upper bound of the generic parameter at {@code index} from {@code type}. For
+         * example, index 1 of {@code Map<String, ? extends Runnable>} returns {@code Runnable}.
+         */
+        protected static Type getParameterUpperBound(int index, ParameterizedType type) {
+            return Utils.getParameterUpperBound(index, type);
+        }
 
         /**
          * Extract the raw class type from {@code type}. For example, the type representing

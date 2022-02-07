@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,11 +33,8 @@ public final class Response<T> {
     /**
      * Create a synthetic successful response with {@code body} as the deserialized body.
      */
-    public static <T> Response<T> success(@Nullable T body) {
-        return success(body, new org.sheedon.mqtt.ResponseBuilder() //
-                .code(200)
-                .message("OK")
-                .build());
+    public static <T> Response<T> success(@Nullable String backTopic, @Nullable T body) {
+        return success(body, new org.sheedon.mqtt.Response(backTopic, "OK"));
     }
 
     /**
@@ -46,31 +43,27 @@ public final class Response<T> {
      */
     public static <T> Response<T> success(@Nullable T body, org.sheedon.mqtt.Response rawResponse) {
         checkNotNull(rawResponse, "rawResponse == null");
-        if (!rawResponse.isSuccessful()) {
+        if (rawResponse.message().isEmpty()) {
             throw new IllegalArgumentException("rawResponse must be successful response");
         }
         return new Response<>(rawResponse, body, null);
     }
 
     /**
-     * Create a synthetic error response with an HTTP status code of {@code code} and {@code body}
-     * as the error body.
+     * Create a synthetic error response with an RR-binder status message of {@code message}
+     * and {@code body} as the error body.
      */
-    public static <T> Response<T> error(int code, ResponseBody body) {
-        if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
-        return error(body, new org.sheedon.mqtt.ResponseBuilder() //
-                .code(code)
-                .message("Response.error()")
-                .build());
+    public static <T> Response<T> error(@Nullable String backTopic, @Nullable String message, ResponseBody body) {
+        if (message.isEmpty()) throw new IllegalArgumentException(message);
+        return error(body, new org.sheedon.mqtt.Response(backTopic, message, body));
     }
 
     /**
      * Create an error response from {@code rawResponse} with {@code body} as the error body.
      */
     public static <T> Response<T> error(ResponseBody body, org.sheedon.mqtt.Response rawResponse) {
-        checkNotNull(body, "body == null");
         checkNotNull(rawResponse, "rawResponse == null");
-        if (rawResponse.isSuccessful()) {
+        if (rawResponse.message().isEmpty()) {
             throw new IllegalArgumentException("rawResponse should not be successful response");
         }
         return new Response<>(rawResponse, null, body);
@@ -90,31 +83,31 @@ public final class Response<T> {
     }
 
     /**
-     * The raw response from the HTTP client.
+     * The raw response from the MQTT client.
      */
     public org.sheedon.mqtt.Response raw() {
         return rawResponse;
     }
 
     /**
-     * HTTP status code.
+     * MQTT status backTopic or "" if unknown.
      */
-    public int code() {
-        return rawResponse.code();
+    public String backTopic() {
+        return rawResponse.backTopic();
     }
 
     /**
-     * HTTP status message or null if unknown.
+     * MQTT status message or null if unknown.
      */
     public String message() {
         return rawResponse.message();
     }
 
     /**
-     * Returns true if {@link #code()} is in the range [200..300).
+     * Returns true if {@link #message()} is message not "".
      */
     public boolean isSuccessful() {
-        return rawResponse.isSuccessful();
+        return rawResponse.message().isEmpty();
     }
 
     /**

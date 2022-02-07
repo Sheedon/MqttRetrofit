@@ -101,7 +101,6 @@ public class RequestBuilder {
             mqttMessage.setPayload(payload);
         }
 
-
         return requestBuilder
                 .topic(topic)
                 .message(mqttMessage)
