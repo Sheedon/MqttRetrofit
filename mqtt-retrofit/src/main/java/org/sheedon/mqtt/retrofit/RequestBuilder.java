@@ -67,9 +67,9 @@ public class RequestBuilder {
     }
 
 
-    void setRelativeTopic(Object value) {
+    void setRelativeTopic(String value) {
         Utils.checkNotNull(value, "topic == null");
-        topic = value.toString();
+        topic = value;
     }
 
 

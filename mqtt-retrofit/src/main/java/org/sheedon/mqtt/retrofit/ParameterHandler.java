@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,9 +62,9 @@ abstract class ParameterHandler<T> {
         };
     }
 
-    static final class RelativeTopic extends ParameterHandler<Object> {
+    static final class RelativeTopic extends ParameterHandler<String> {
         @Override
-        void apply(RequestBuilder builder, @Nullable Object value) {
+        void apply(RequestBuilder builder, @Nullable String value) {
             checkNotNull(value, "@Theme parameter is null.");
             builder.setRelativeTopic(value);
         }
@@ -114,9 +114,9 @@ abstract class ParameterHandler<T> {
     }
 
     static final class Body<T> extends ParameterHandler<T> {
-        private final Converter<T, RequestBody> converter;
+        private final Converter<T, String> converter;
 
-        Body(Converter<T, RequestBody> converter) {
+        Body(Converter<T, String> converter) {
             this.converter = converter;
         }
 
@@ -125,7 +125,7 @@ abstract class ParameterHandler<T> {
             if (value == null) {
                 throw new IllegalArgumentException("Body parameter value must not be null.");
             }
-            RequestBody body;
+            String body;
             try {
                 body = converter.convert(value);
             } catch (IOException e) {
