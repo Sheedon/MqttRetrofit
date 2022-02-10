@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
  */
 package org.sheedon.mqtt.retrofit;
 
-
 import androidx.annotation.GuardedBy;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.sheedon.mqtt.Request;
@@ -26,18 +26,18 @@ import java.io.IOException;
 
 import static org.sheedon.mqtt.retrofit.Utils.throwIfFatal;
 
-
 /**
- * 串口观察者
+ * mqtt观察者
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/4/14 14:20
  */
 final class OkMqttObservable<T> implements Observable<T> {
-    private final ServiceMethod<T, ?> serviceMethod;
-    private final @Nullable
-    Object[] args;
+    private final RequestFactory requestFactory;
+    private final Object[] args;
+    private final org.sheedon.mqtt.Observable.Factory observableFactory;
+    private final Converter<ResponseBody, T> responseConverter;
 
     private volatile boolean canceled;
 
@@ -50,22 +50,39 @@ final class OkMqttObservable<T> implements Observable<T> {
     @GuardedBy("this")
     private boolean executed;
 
-    OkMqttObservable(ServiceMethod<T, ?> serviceMethod, @Nullable Object[] args) {
-        this.serviceMethod = serviceMethod;
+    OkMqttObservable(RequestFactory requestFactory,
+                     @Nullable Object[] args,
+                     org.sheedon.mqtt.Observable.Factory observableFactory,
+                     Converter<ResponseBody, T> responseConverter) {
+        this.requestFactory = requestFactory;
         this.args = args;
-    }
-
-    @Override
-    public Observable<T> clone() {
-        return new OkMqttObservable<>(serviceMethod, args);
+        this.observableFactory = observableFactory;
+        this.responseConverter = responseConverter;
     }
 
     @Override
     public synchronized Request request() {
-        org.sheedon.mqtt.Observable observable = rawObservable;
-        if (observable != null) {
-            return observable.request();
+        try {
+            return getRawObservable().request();
+        } catch (RuntimeException | Error e) {
+            throwIfFatal(e); // Do not assign a fatal error to creationFailure.
+            creationFailure = e;
+            throw e;
+        } catch (IOException e) {
+            creationFailure = e;
+            throw new RuntimeException("Unable to create request.", e);
         }
+    }
+
+    /**
+     * Returns the raw observable, initializing it if necessary. Throws if initializing the raw call throws,
+     * or has thrown in previous attempts to create it.
+     */
+    @GuardedBy("this")
+    private org.sheedon.mqtt.Observable getRawObservable() throws IOException {
+        org.sheedon.mqtt.Observable observable = rawObservable;
+        if (observable != null) return observable;
+
         if (creationFailure != null) {
             if (creationFailure instanceof IOException) {
                 throw new RuntimeException("Unable to create request.", creationFailure);
@@ -77,13 +94,10 @@ final class OkMqttObservable<T> implements Observable<T> {
         }
         try {
             return (rawObservable = createRawObservable()).request();
-        } catch (RuntimeException | Error e) {
+        } catch (RuntimeException | Error | IOException e) {
             throwIfFatal(e); // Do not assign a fatal error to creationFailure.
             creationFailure = e;
             throw e;
-        } catch (IOException e) {
-            creationFailure = e;
-            throw new RuntimeException("Unable to create request.", e);
         }
     }
 
@@ -117,18 +131,9 @@ final class OkMqttObservable<T> implements Observable<T> {
         if (callback == null)
             return;
 
-        observable.subscribe(new org.sheedon.mqtt.Callback<org.sheedon.mqtt.Response>() {
+        observable.subscribe(new org.sheedon.mqtt.Callback() {
             @Override
-            public void onFailure(Throwable e) {
-                try {
-                    dealWithCallback(callback, OkMqttObservable.this, null, e, false);
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onResponse(org.sheedon.mqtt.Response rawResponse) {
+            public void onResponse(@NonNull Request request, @NonNull org.sheedon.mqtt.Response rawResponse) {
                 Response<T> response;
                 try {
                     response = parseResponse(rawResponse);
@@ -137,6 +142,15 @@ final class OkMqttObservable<T> implements Observable<T> {
                     return;
                 }
                 callSuccess(response);
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                try {
+                    dealWithCallback(callback, OkMqttObservable.this, null, e, false);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
             }
 
             private void callFailure(Throwable e) {
@@ -166,22 +180,26 @@ final class OkMqttObservable<T> implements Observable<T> {
      * @param t          错误
      * @param isSuccess  是否成功
      */
-    private void dealWithCallback(Callback.Observable callback, Observable<T> observable, Response<T> response, Throwable t, boolean isSuccess) {
+    private void dealWithCallback(Callback.Observable<T> callback, Observable<T> observable, Response<T> response, Throwable t, boolean isSuccess) {
 
         if (callback == null)
             return;
 
-        if (isSuccess) {
-            callback.onResponse(observable, response);
-        } else {
-            callback.onFailure(observable, t);
+        try {
+            if (isSuccess) {
+                callback.onResponse(observable, response);
+            } else {
+                callback.onFailure(observable, t);
+            }
+        } catch (Throwable throwable) {
+            throwIfFatal(throwable);
+            t.printStackTrace(); // TODO this is not great
         }
 
     }
 
     private org.sheedon.mqtt.Observable createRawObservable() throws IOException {
-        Request request = serviceMethod.toRequest(args);
-        org.sheedon.mqtt.Observable observable = serviceMethod.mqttFactory.newObservable(request);
+        org.sheedon.mqtt.Observable observable = observableFactory.newObservable(requestFactory.create(args));
         if (observable == null) {
             throw new NullPointerException("Observable.SerialFactory returned null.");
         }
@@ -192,7 +210,7 @@ final class OkMqttObservable<T> implements Observable<T> {
         ResponseBody rawBody = rawResponse.body();
 
         try {
-            T body = serviceMethod.toResponse(rawBody);
+            T body = responseConverter.convert(rawBody);
             return Response.success(body, rawResponse);
         } catch (RuntimeException e) {
             // If the underlying source threw an exception, propagate that rather than indicating it was

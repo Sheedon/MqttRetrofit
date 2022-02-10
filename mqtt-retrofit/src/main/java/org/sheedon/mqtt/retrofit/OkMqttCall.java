@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,8 @@
  */
 package org.sheedon.mqtt.retrofit;
 
-
-
 import androidx.annotation.GuardedBy;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.sheedon.mqtt.Request;
@@ -27,17 +26,18 @@ import java.io.IOException;
 
 import static org.sheedon.mqtt.retrofit.Utils.throwIfFatal;
 
-
 /**
  * okmqtt调度
+ *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 22:27
  */
 final class OkMqttCall<T> implements Call<T> {
-    private final ServiceMethod<T, ?> serviceMethod;
-    private final @Nullable
-    Object[] args;
+    private final RequestFactory requestFactory;
+    private final Object[] args;
+    private final org.sheedon.mqtt.Call.Factory callFactory;
+    private final Converter<ResponseBody, T> responseConverter;
 
     private volatile boolean canceled;
 
@@ -50,33 +50,20 @@ final class OkMqttCall<T> implements Call<T> {
     @GuardedBy("this")
     private boolean executed;
 
-    OkMqttCall(ServiceMethod<T, ?> serviceMethod, @Nullable Object[] args) {
-        this.serviceMethod = serviceMethod;
+    OkMqttCall(RequestFactory requestFactory,
+               @Nullable Object[] args,
+               org.sheedon.mqtt.Call.Factory callFactory,
+               Converter<ResponseBody, T> responseConverter) {
+        this.requestFactory = requestFactory;
         this.args = args;
-    }
-
-    @Override
-    public Call<T> clone() {
-        return new OkMqttCall<>(serviceMethod, args);
+        this.callFactory = callFactory;
+        this.responseConverter = responseConverter;
     }
 
     @Override
     public synchronized Request request() {
-        org.sheedon.mqtt.Call call = rawCall;
-        if (call != null) {
-            return call.request();
-        }
-        if (creationFailure != null) {
-            if (creationFailure instanceof IOException) {
-                throw new RuntimeException("Unable to create request.", creationFailure);
-            } else if (creationFailure instanceof RuntimeException) {
-                throw (RuntimeException) creationFailure;
-            } else {
-                throw (Error) creationFailure;
-            }
-        }
         try {
-            return (rawCall = createRawCall()).request();
+            return getRawCall().request();
         } catch (RuntimeException | Error e) {
             throwIfFatal(e); // Do not assign a fatal error to creationFailure.
             creationFailure = e;
@@ -87,13 +74,40 @@ final class OkMqttCall<T> implements Call<T> {
         }
     }
 
+    /**
+     * Returns the raw call, initializing it if necessary. Throws if initializing the raw call throws,
+     * or has thrown in previous attempts to create it.
+     */
+    @GuardedBy("this")
+    private org.sheedon.mqtt.Call getRawCall() throws IOException{
+        org.sheedon.mqtt.Call call = rawCall;
+        if (call != null) return call;
+
+        if (creationFailure != null) {
+            if (creationFailure instanceof IOException) {
+                throw new RuntimeException("Unable to create request.", creationFailure);
+            } else if (creationFailure instanceof RuntimeException) {
+                throw (RuntimeException) creationFailure;
+            } else {
+                throw (Error) creationFailure;
+            }
+        }
+        try {
+            return rawCall = createRawCall();
+        } catch (RuntimeException | Error | IOException e) {
+            throwIfFatal(e); // Do not assign a fatal error to creationFailure.
+            creationFailure = e;
+            throw e;
+        }
+    }
+
     @Override
-    public void publishNotCallback() {
+    public void publish() {
         enqueue(null);
     }
 
     @Override
-    public void enqueue(final Callback.Call callback) {
+    public void enqueue(final Callback.Call<T> callback) {
 
         org.sheedon.mqtt.Call call;
         Throwable failure;
@@ -123,44 +137,35 @@ final class OkMqttCall<T> implements Call<T> {
         }
 
         if (callback == null)
-            call.publishNotCallback();
+            call.publish();
         else
-            call.enqueue(new org.sheedon.mqtt.Callback<org.sheedon.mqtt.Response>() {
+            call.enqueue(new org.sheedon.mqtt.Callback() {
                 @Override
-                public void onFailure(Throwable e) {
-                    try {
-                        dealWithCallback(callback, OkMqttCall.this, null, e, false);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onResponse(org.sheedon.mqtt.Response rawResponse) {
+                public void onResponse(@NonNull Request request,
+                                       @NonNull org.sheedon.mqtt.Response rawResponse) {
                     Response<T> response;
                     try {
                         response = parseResponse(rawResponse);
                     } catch (Throwable e) {
+                        throwIfFatal(e);
                         callFailure(e);
                         return;
                     }
+
                     callSuccess(response);
                 }
 
+                @Override
+                public void onFailure(Throwable e) {
+                    dealWithCallback(callback, OkMqttCall.this, null, e, false);
+                }
+
                 private void callFailure(Throwable e) {
-                    try {
-                        dealWithCallback(callback, OkMqttCall.this, null, e, false);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
+                    dealWithCallback(callback, OkMqttCall.this, null, e, false);
                 }
 
                 private void callSuccess(Response<T> response) {
-                    try {
-                        dealWithCallback(callback, OkMqttCall.this, response, null, true);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
+                    dealWithCallback(callback, OkMqttCall.this, response, null, true);
                 }
             });
     }
@@ -174,22 +179,26 @@ final class OkMqttCall<T> implements Call<T> {
      * @param t         错误
      * @param isSuccess 是否成功
      */
-    private void dealWithCallback(Callback.Call callback, Call<T> call, Response<T> response, Throwable t, boolean isSuccess) {
+    private void dealWithCallback(Callback.Call<T> callback, Call<T> call, Response<T> response, Throwable t, boolean isSuccess) {
 
         if (callback == null)
             return;
 
-        if (isSuccess) {
-            callback.onResponse(call, response);
-        } else {
-            callback.onFailure(call, t);
+        try {
+            if (isSuccess) {
+                callback.onResponse(call, response);
+            } else {
+                callback.onFailure(call, t);
+            }
+        } catch (Throwable throwable) {
+            throwIfFatal(throwable);
+            t.printStackTrace(); // TODO this is not great
         }
 
     }
 
     private org.sheedon.mqtt.Call createRawCall() throws IOException {
-        Request request = serviceMethod.toRequest(args);
-        org.sheedon.mqtt.Call call = serviceMethod.mqttFactory.newCall(request);
+        org.sheedon.mqtt.Call call = callFactory.newCall(requestFactory.create(args));
         if (call == null) {
             throw new NullPointerException("MqttFactory returned null.");
         }
@@ -200,7 +209,7 @@ final class OkMqttCall<T> implements Call<T> {
         ResponseBody rawBody = rawResponse.body();
 
         try {
-            T body = serviceMethod.toResponse(rawBody);
+            T body = responseConverter.convert(rawBody);
             return Response.success(body, rawResponse);
         } catch (RuntimeException e) {
             // If the underlying source threw an exception, propagate that rather than indicating it was

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ import org.sheedon.mqtt.Request;
  * @Email: sheedonsun@163.com
  * @Date: 2020/4/14 12:58
  */
-public interface Observable<T> extends Cloneable {
+public interface Observable<T>{
     /**
      * Returns the original request that initiated this call.
      */
@@ -45,6 +45,4 @@ public interface Observable<T> extends Cloneable {
     boolean isExecuted();
 
     boolean isCanceled();
-
-    Observable<T> clone();
 }
