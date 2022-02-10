@@ -93,7 +93,8 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
             if (callAdapter.rawType() == Observable.class) {
 
-                return new ObservableAdapted<>(retrofit.observableFactory, callFactory, responseConverter, callAdapter);
+                return new ObservableAdapted<>(requestFactory, responseConverter,
+                        retrofit.observableFactory, callAdapter);
             }
 
             return new CallAdapted<>(requestFactory, callFactory, responseConverter, callAdapter);
@@ -141,7 +142,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     private final org.sheedon.mqtt.Call.Factory callFactory;
     private final org.sheedon.mqtt.Observable.Factory observableFactory;
     private final Converter<ResponseBody, ResponseT> responseConverter;
-    private boolean isObservable = false;
+    private boolean isObservable;
 
     MqttServiceMethod(
             RequestFactory requestFactory,
