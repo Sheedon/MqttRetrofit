@@ -52,7 +52,13 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
                             "and Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
         }
 
-        final Type responseType = Utils.getCallResponseType(returnType);
+        final Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
+
+        final Executor executor =
+                Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)
+                        ? null
+                        : callbackExecutor;
+
         return new CallAdapter<Object, Object>() {
             @Override
             public Type rawType() {
@@ -66,12 +72,12 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
             @Override
             public Call<Object> adapt(Call<Object> call) {
-                return new ExecutorCallAdapterFactory.ExecutorCallbackCall<>(callbackExecutor, call);
+                return executor == null ? call : new ExecutorCallbackCall<>(executor, call);
             }
 
             @Override
             public Observable<Object> adapt(Observable<Object> observable) {
-                return new ExecutorCallAdapterFactory.ExecutorCallbackObservable<>(callbackExecutor, observable);
+                return new ExecutorCallbackObservable<>(callbackExecutor,observable);
             }
         };
     }
@@ -101,26 +107,20 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             return delegate.isCanceled();
         }
 
-        @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
-        @Override
-        public Call<T> clone() {
-            return new ExecutorCallAdapterFactory.ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
-        }
-
         @Override
         public Request request() {
             return delegate.request();
         }
 
         @Override
-        public void publishNotCallback() {
+        public void publish() {
             enqueue(null);
         }
 
         @Override
         public void enqueue(final Callback.Call<T> callback) {
             if (callback == null) {
-                delegate.publishNotCallback();
+                delegate.publish();
                 return;
             }
 
@@ -169,11 +169,6 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             return delegate.isCanceled();
         }
 
-        @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
-        @Override
-        public Observable<T> clone() {
-            return new ExecutorCallAdapterFactory.ExecutorCallbackObservable<>(callbackExecutor, delegate.clone());
-        }
 
         @Override
         public Request request() {
