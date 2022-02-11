@@ -19,7 +19,7 @@ import androidx.annotation.Nullable;
 
 import org.sheedon.mqtt.ResponseBody;
 
-import static org.sheedon.mqtt.retrofit.Utils.checkNotNull;
+import java.util.Objects;
 
 
 /**
@@ -42,7 +42,7 @@ public final class Response<T> {
      * body.
      */
     public static <T> Response<T> success(@Nullable T body, org.sheedon.mqtt.Response rawResponse) {
-        checkNotNull(rawResponse, "rawResponse == null");
+        Objects.requireNonNull(rawResponse, "rawResponse == null");
         if (rawResponse.message().isEmpty()) {
             throw new IllegalArgumentException("rawResponse must be successful response");
         }
@@ -62,7 +62,7 @@ public final class Response<T> {
      * Create an error response from {@code rawResponse} with {@code body} as the error body.
      */
     public static <T> Response<T> error(ResponseBody body, org.sheedon.mqtt.Response rawResponse) {
-        checkNotNull(rawResponse, "rawResponse == null");
+        Objects.requireNonNull(rawResponse, "rawResponse == null");
         if (rawResponse.message().isEmpty()) {
             throw new IllegalArgumentException("rawResponse should not be successful response");
         }

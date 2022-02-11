@@ -17,13 +17,9 @@ package org.sheedon.mqtt.retrofit;
 
 import androidx.annotation.Nullable;
 
-import org.sheedon.mqtt.RequestBody;
-
 import java.io.IOException;
 import java.lang.reflect.Array;
-
-import static org.sheedon.mqtt.retrofit.Utils.checkNotNull;
-
+import java.util.Objects;
 
 /**
  * 参数处理程序
@@ -65,7 +61,7 @@ abstract class ParameterHandler<T> {
     static final class RelativeTopic extends ParameterHandler<String> {
         @Override
         void apply(RequestBuilder builder, @Nullable String value) {
-            checkNotNull(value, "@Theme parameter is null.");
+            Objects.requireNonNull(value, "@Theme parameter is null.");
             builder.setRelativeTopic(value);
         }
     }
@@ -76,7 +72,7 @@ abstract class ParameterHandler<T> {
         private final boolean encoded;
 
         Path(String name, Converter<T, String> valueConverter, boolean encoded) {
-            this.name = checkNotNull(name, "name == null");
+            this.name = Objects.requireNonNull(name, "name == null");
             this.valueConverter = valueConverter;
             this.encoded = encoded;
         }
@@ -97,7 +93,7 @@ abstract class ParameterHandler<T> {
         private final boolean encoded;
 
         Field(String name, Converter<T, String> valueConverter, boolean encoded) {
-            this.name = checkNotNull(name, "name == null");
+            this.name = Objects.requireNonNull(name, "name == null");
             this.valueConverter = valueConverter;
             this.encoded = encoded;
         }

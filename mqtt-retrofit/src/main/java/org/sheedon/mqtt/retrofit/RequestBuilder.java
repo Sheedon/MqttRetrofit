@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import org.sheedon.mqtt.Request;
 
 import java.nio.charset.Charset;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -68,7 +69,7 @@ public class RequestBuilder {
 
 
     void setRelativeTopic(String value) {
-        Utils.checkNotNull(value, "topic == null");
+        Objects.requireNonNull(value, "topic == null");
         topic = value;
     }
 

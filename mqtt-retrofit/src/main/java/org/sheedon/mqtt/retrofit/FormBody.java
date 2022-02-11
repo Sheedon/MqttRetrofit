@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 package org.sheedon.mqtt.retrofit;
-
-import com.google.gson.Gson;
-
-import org.sheedon.mqtt.RequestBody;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -30,22 +26,34 @@ import java.util.List;
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/24 16:33
  */
-final class FormBody extends RequestBody {
+final class FormBody {
 
     private final List<String> encodedNames;
     private final List<String> encodedValues;
 
-    private Gson gson;
-
-    private FormBody(List<String> encodedNames, List<String> encodedValues, Gson gson) {
+    private FormBody(List<String> encodedNames, List<String> encodedValues) {
         this.encodedNames = Utils.immutableList(encodedNames);
         this.encodedValues = Utils.immutableList(encodedValues);
-        this.gson = gson;
+    }
 
-        if (this.gson == null) {
-            this.gson = new Gson();
+    private String convertToString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{");
+
+        int size = encodedNames.size();
+        for (int index = 0; index < size; index++) {
+            String name = encodedNames.get(index);
+            String values = encodedValues.get(index);
+            builder.append(convert(name, values));
+            builder.append(",");
         }
-        integrationData();
+
+        if (builder.length() > 1) {
+            builder.deleteCharAt(builder.length() - 1);
+        }
+        builder.append("}");
+
+        return builder.toString();
     }
 
     private void integrationData() {
@@ -64,12 +72,10 @@ final class FormBody extends RequestBody {
             builder.deleteCharAt(builder.length() - 1);
         }
         builder.append("}");
-
-        updateData(builder.toString());
     }
 
     private String convert(String name, String values) {
-        return "\"" + name + "\":" + gson.toJson(values);
+        return "\"" + name + "\":\"" + values + "\"";
     }
 
 
@@ -77,7 +83,6 @@ final class FormBody extends RequestBody {
         private final List<String> names = new ArrayList<>();
         private final List<String> values = new ArrayList<>();
         private final Charset charset;
-        private Gson gson;
 
         Builder() {
             this(null);
@@ -94,19 +99,11 @@ final class FormBody extends RequestBody {
             names.add(name);
             values.add(value);
 
-//            names.add(HttpUrl.canonicalize(name, FORM_ENCODE_SET, false, false, true, true, charset));
-//            values.add(HttpUrl.canonicalize(value, FORM_ENCODE_SET, false, false, true, true, charset));
             return this;
         }
 
-        Builder bindGson(Gson gson) {
-            if (gson == null) throw new NullPointerException("gson == null");
-            this.gson = gson;
-            return this;
-        }
-
-        public FormBody build() {
-            return new FormBody(names, values, gson);
+        public String build() {
+            return new FormBody(names, values).convertToString();
         }
 
         Builder addEncoded(String name, String value) {

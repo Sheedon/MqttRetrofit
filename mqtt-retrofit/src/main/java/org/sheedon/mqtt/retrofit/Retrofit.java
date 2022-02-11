@@ -35,7 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 import static java.util.Collections.unmodifiableList;
-import static org.sheedon.mqtt.retrofit.Utils.checkNotNull;
 
 /**
  * Retrofit adapts a Java interface to MQTT calls/observables by using annotations on the declared methods to
@@ -71,6 +70,7 @@ public class Retrofit {
     final @Nullable
     Executor callbackExecutor;
     final boolean validateEagerly;
+    final int timeout;
 
     Retrofit(org.sheedon.mqtt.Call.Factory callFactory,
              org.sheedon.mqtt.Observable.Factory observableFactory,
@@ -79,7 +79,8 @@ public class Retrofit {
              int defaultConverterFactoriesSize,
              List<CallAdapter.Factory> adapterFactories,
              int defaultCallAdapterFactoriesSize,
-             @Nullable Executor callbackExecutor, boolean validateEagerly) {
+             @Nullable Executor callbackExecutor, boolean validateEagerly,
+             int defaultTimeout) {
         this.callFactory = callFactory;
         this.observableFactory = observableFactory;
         this.baseTopic = baseTopic;
@@ -89,6 +90,7 @@ public class Retrofit {
         this.defaultCallAdapterFactoriesSize = defaultCallAdapterFactoriesSize;
         this.callbackExecutor = callbackExecutor;
         this.validateEagerly = validateEagerly;
+        this.timeout = defaultTimeout;
 
     }
 
@@ -198,8 +200,8 @@ public class Retrofit {
      */
     private CallAdapter<?, ?> nextCallAdapter(@Nullable CallAdapter.Factory skipPast, Type returnType,
                                               Annotation[] annotations) {
-        checkNotNull(returnType, "returnType == null");
-        checkNotNull(annotations, "annotations == null");
+        Objects.requireNonNull(returnType, "returnType == null");
+        Objects.requireNonNull(annotations, "annotations == null");
 
         int start = callAdapterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = callAdapterFactories.size(); i < count; i++) {
@@ -242,7 +244,7 @@ public class Retrofit {
      *
      * @throws IllegalArgumentException if no converter available for {@code type}.
      */
-    <T> Converter<T, RequestBody> requestBodyConverter(
+    <T> Converter<T, String> requestBodyConverter(
             Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
         return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
     }
@@ -253,7 +255,7 @@ public class Retrofit {
      *
      * @throws IllegalArgumentException if no converter available for {@code type}.
      */
-    <T> Converter<T, RequestBody> nextRequestBodyConverter(
+    <T> Converter<T, String> nextRequestBodyConverter(
             @Nullable Converter.Factory skipPast,
             Type type,
             Annotation[] parameterAnnotations,
@@ -265,11 +267,11 @@ public class Retrofit {
         int start = converterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = converterFactories.size(); i < count; i++) {
             Converter.Factory factory = converterFactories.get(i);
-            Converter<?, RequestBody> converter =
+            Converter<?, String> converter =
                     factory.requestBodyConverter(type, parameterAnnotations, methodAnnotations, this);
             if (converter != null) {
                 //noinspection unchecked
-                return (Converter<T, RequestBody>) converter;
+                return (Converter<T, String>) converter;
             }
         }
 
@@ -307,8 +309,8 @@ public class Retrofit {
      */
     private <T> Converter<ResponseBody, T> nextResponseBodyConverter(
             @Nullable Converter.Factory skipPast, Type type, Annotation[] annotations) {
-        checkNotNull(type, "type == null");
-        checkNotNull(annotations, "annotations == null");
+        Objects.requireNonNull(type, "type == null");
+        Objects.requireNonNull(annotations, "annotations == null");
 
         int start = converterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = converterFactories.size(); i < count; i++) {
@@ -342,8 +344,8 @@ public class Retrofit {
      * {@linkplain #converterFactories() factories}.
      */
     <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
-        checkNotNull(type, "type == null");
-        checkNotNull(annotations, "annotations == null");
+        Objects.requireNonNull(type, "type == null");
+        Objects.requireNonNull(annotations, "annotations == null");
 
         for (int i = 0, count = converterFactories.size(); i < count; i++) {
             Converter<?, String> converter =
@@ -357,6 +359,14 @@ public class Retrofit {
         // Nothing matched. Resort to default converter which just calls toString().
         //noinspection unchecked
         return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
+    }
+
+    /**
+     * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null}, in
+     * which case callbacks should be made synchronously on the background thread.
+     */
+    public @Nullable Executor callbackExecutor() {
+        return callbackExecutor;
     }
 
     public Builder newBuilder() {
@@ -374,6 +384,7 @@ public class Retrofit {
         private @Nullable
         Executor callbackExecutor;
         private boolean validateEagerly;
+        private int timeout;
 
         public Builder() {
         }
@@ -411,6 +422,7 @@ public class Retrofit {
          */
         public Builder client(OkMqttClient client) {
             OkMqttClient mqttClient = Objects.requireNonNull(client, "client == null");
+            this.timeout = client.getDefaultTimeout();
             callFactory(mqttClient);
             observableFactory(mqttClient);
             return this;
@@ -422,7 +434,7 @@ public class Retrofit {
          * Note: Calling {@link #client} automatically sets this value.
          */
         public Builder callFactory(org.sheedon.mqtt.Call.Factory factory) {
-            this.callFactory = checkNotNull(factory, "CallFactory == null");
+            this.callFactory = Objects.requireNonNull(factory, "CallFactory == null");
             return this;
         }
 
@@ -432,7 +444,7 @@ public class Retrofit {
          * Note: Calling {@link #client} automatically sets this value.
          */
         public Builder observableFactory(org.sheedon.mqtt.Observable.Factory factory) {
-            this.observableFactory = checkNotNull(factory, "ObservableFactory == null");
+            this.observableFactory = Objects.requireNonNull(factory, "ObservableFactory == null");
             return this;
         }
 
@@ -440,8 +452,7 @@ public class Retrofit {
          * Set the API base Topic.
          */
         public Builder baseTopic(String baseTopic) {
-            checkNotNull(baseTopic, "baseTopic == null");
-            this.baseTopic = baseTopic;
+            this.baseTopic = Objects.requireNonNull(baseTopic, "baseTopic == null");
             return this;
         }
 
@@ -450,7 +461,7 @@ public class Retrofit {
          * Add converter factory for serialization and deserialization of objects.
          */
         public Builder addConverterFactory(Converter.Factory factory) {
-            converterFactories.add(checkNotNull(factory, "factory == null"));
+            converterFactories.add(Objects.requireNonNull(factory, "factory == null"));
             return this;
         }
 
@@ -459,7 +470,7 @@ public class Retrofit {
          * Call}.
          */
         public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
-            callAdapterFactories.add(checkNotNull(factory, "factory == null"));
+            callAdapterFactories.add(Objects.requireNonNull(factory, "factory == null"));
             return this;
         }
 
@@ -471,7 +482,7 @@ public class Retrofit {
          * return types}.
          */
         public Builder callbackExecutor(Executor executor) {
-            this.callbackExecutor = checkNotNull(executor, "executor == null");
+            this.callbackExecutor = Objects.requireNonNull(executor, "executor == null");
             return this;
         }
 
@@ -545,7 +556,7 @@ public class Retrofit {
                     defaultConverterFactoriesSize,
                     unmodifiableList(callAdapterFactories),
                     defaultCallAdapterFactories.size(),
-                    callbackExecutor, validateEagerly);
+                    callbackExecutor, validateEagerly, timeout);
         }
     }
 }
