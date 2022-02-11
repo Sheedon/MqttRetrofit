@@ -11,8 +11,8 @@ import java.lang.reflect.Type;
 
 /**
  * Change the behavior of a {@code Call<BodyType>} return type to not use the {@linkplain
- * Retrofit#callbackExecutor() callback executor} for invoking the {@link Callback#onResponse(Call,
- * Response) onResponse} or {@link Callback#onFailure(Call, Throwable) onFailure} methods.
+ * Retrofit#callbackExecutor() callback executor} for invoking the {@link Callback.Call#onResponse(Call,
+ * Response) onResponse} or {@link Callback.Call#onFailure(Call, Throwable) onFailure} methods.
  *
  * <pre><code>
  * &#64;SkipCallbackExecutor
@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
  *
  * This annotation can also be used when a {@link CallAdapter.Factory} <em>explicitly</em> delegates
  * to the built-in factory for {@link Call} via {@link Retrofit#nextCallAdapter(CallAdapter.Factory,
- * Type, Annotation[])} in order for the returned {@link Call} to skip the executor. (Note: by
+ * Type, Annotation[])}  in order for the returned {@link Call} to skip the executor. (Note: by
  * default, a {@link Call} supplied directly to a {@link CallAdapter} will already skip the callback
  * executor. The annotation is only useful when looking up the built-in adapter.)
  *

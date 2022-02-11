@@ -26,7 +26,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -525,5 +528,10 @@ final class Utils {
         } else if (t instanceof LinkageError) {
             throw (LinkageError) t;
         }
+    }
+
+    /** Returns an immutable copy of {@code list}. */
+    public static <T> List<T> immutableList(List<T> list) {
+        return Collections.unmodifiableList(new ArrayList<>(list));
     }
 }
