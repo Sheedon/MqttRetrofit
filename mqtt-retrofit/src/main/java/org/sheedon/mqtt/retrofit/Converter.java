@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@ package org.sheedon.mqtt.retrofit;
 
 import androidx.annotation.Nullable;
 
-import org.sheedon.mqtt.RequestBody;
 import org.sheedon.mqtt.ResponseBody;
 
 import java.io.IOException;
@@ -53,7 +52,7 @@ public interface Converter<F, T> {
 
 
         public @Nullable
-        Converter<?, RequestBody> requestBodyConverter(Type type,
+        Converter<?, String> requestBodyConverter(Type type,
                                                        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
             return null;
         }
