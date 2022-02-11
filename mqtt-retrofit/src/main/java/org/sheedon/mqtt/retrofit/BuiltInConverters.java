@@ -58,8 +58,9 @@ public final class BuiltInConverters extends Converter.Factory {
     }
 
     @Override
-    public Converter<?, RequestBody> requestBodyConverter(Type type,
-                                                          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+    public Converter<?, String> requestBodyConverter(Type type,
+                                                          Annotation[] parameterAnnotations,
+                                                          Annotation[] methodAnnotations, Retrofit retrofit) {
         if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
             return RequestBodyConverter.INSTANCE;
         }
@@ -75,12 +76,12 @@ public final class BuiltInConverters extends Converter.Factory {
         }
     }
 
-    public static final class RequestBodyConverter implements Converter<RequestBody, RequestBody> {
+    public static final class RequestBodyConverter implements Converter<RequestBody, String> {
         static final RequestBodyConverter INSTANCE = new RequestBodyConverter();
 
         @Override
-        public RequestBody convert(RequestBody value) {
-            return value;
+        public String convert(RequestBody value) {
+            return value.toString();
         }
     }
 
