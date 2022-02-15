@@ -60,8 +60,8 @@ import static java.util.Collections.unmodifiableList;
 public class Retrofit {
     private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-    final org.sheedon.mqtt.Call.Factory callFactory;
-    final org.sheedon.mqtt.Observable.Factory observableFactory;
+    final org.sheedon.mqtt.CallFactory callFactory;
+    final org.sheedon.mqtt.ObservableFactory observableFactory;
     final String baseTopic;
     final List<Converter.Factory> converterFactories;
     final int defaultConverterFactoriesSize;
@@ -72,8 +72,8 @@ public class Retrofit {
     final boolean validateEagerly;
     final int timeout;
 
-    Retrofit(org.sheedon.mqtt.Call.Factory callFactory,
-             org.sheedon.mqtt.Observable.Factory observableFactory,
+    Retrofit(org.sheedon.mqtt.CallFactory callFactory,
+             org.sheedon.mqtt.ObservableFactory observableFactory,
              String baseTopic,
              List<Converter.Factory> converterFactories,
              int defaultConverterFactoriesSize,
@@ -155,7 +155,7 @@ public class Retrofit {
      * The factory used to create {@linkplain org.sheedon.mqtt.Call OkMqtt calls} for sending a MQTT requests.
      * Typically an instance of {@link OkMqttClient}.
      */
-    public org.sheedon.mqtt.Call.Factory callFactory() {
+    public org.sheedon.mqtt.CallFactory callFactory() {
         return callFactory;
     }
 
@@ -163,7 +163,7 @@ public class Retrofit {
      * The factory used to create {@linkplain org.sheedon.mqtt.Observable OkMqtt observables} for sending a MQTT requests.
      * Typically an instance of {@link OkMqttClient}.
      */
-    public org.sheedon.mqtt.Observable.Factory observableFactory() {
+    public org.sheedon.mqtt.ObservableFactory observableFactory() {
         return observableFactory;
     }
 
@@ -375,9 +375,9 @@ public class Retrofit {
 
     public static final class Builder {
         private @Nullable
-        org.sheedon.mqtt.Call.Factory callFactory;
+        org.sheedon.mqtt.CallFactory callFactory;
         private @Nullable
-        org.sheedon.mqtt.Observable.Factory observableFactory;
+        org.sheedon.mqtt.ObservableFactory observableFactory;
         private String baseTopic;
         private final List<Converter.Factory> converterFactories = new ArrayList<>();
         private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
@@ -423,7 +423,7 @@ public class Retrofit {
         public Builder client(OkMqttClient client) {
             OkMqttClient mqttClient = Objects.requireNonNull(client, "client == null");
             this.timeout = client.getDefaultTimeout();
-            callFactory(mqttClient);
+            callFactory(mqttClient );
             observableFactory(mqttClient);
             return this;
         }
@@ -433,7 +433,7 @@ public class Retrofit {
          * <p>
          * Note: Calling {@link #client} automatically sets this value.
          */
-        public Builder callFactory(org.sheedon.mqtt.Call.Factory factory) {
+        public Builder callFactory(org.sheedon.mqtt.CallFactory factory) {
             this.callFactory = Objects.requireNonNull(factory, "CallFactory == null");
             return this;
         }
@@ -443,7 +443,7 @@ public class Retrofit {
          * <p>
          * Note: Calling {@link #client} automatically sets this value.
          */
-        public Builder observableFactory(org.sheedon.mqtt.Observable.Factory factory) {
+        public Builder observableFactory(org.sheedon.mqtt.ObservableFactory factory) {
             this.observableFactory = Objects.requireNonNull(factory, "ObservableFactory == null");
             return this;
         }
@@ -517,12 +517,12 @@ public class Retrofit {
 
             Platform platform = Platform.get();
 
-            org.sheedon.mqtt.Call.Factory callFactory = this.callFactory;
+            org.sheedon.mqtt.CallFactory callFactory = this.callFactory;
             if (callFactory == null) {
                 throw new IllegalStateException("callFactory is null.");
             }
 
-            org.sheedon.mqtt.Observable.Factory observableFactory = this.observableFactory;
+            org.sheedon.mqtt.ObservableFactory observableFactory = this.observableFactory;
             if (observableFactory == null) {
                 throw new IllegalStateException("callFactory is null.");
             }

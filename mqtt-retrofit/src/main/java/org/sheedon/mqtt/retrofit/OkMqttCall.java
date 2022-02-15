@@ -36,7 +36,7 @@ import static org.sheedon.mqtt.retrofit.Utils.throwIfFatal;
 final class OkMqttCall<T> implements Call<T> {
     private final RequestFactory requestFactory;
     private final Object[] args;
-    private final org.sheedon.mqtt.Call.Factory callFactory;
+    private final org.sheedon.mqtt.CallFactory callFactory;
     private final Converter<ResponseBody, T> responseConverter;
 
     private volatile boolean canceled;
@@ -52,7 +52,7 @@ final class OkMqttCall<T> implements Call<T> {
 
     OkMqttCall(RequestFactory requestFactory,
                @Nullable Object[] args,
-               org.sheedon.mqtt.Call.Factory callFactory,
+               org.sheedon.mqtt.CallFactory callFactory,
                Converter<ResponseBody, T> responseConverter) {
         this.requestFactory = requestFactory;
         this.args = args;

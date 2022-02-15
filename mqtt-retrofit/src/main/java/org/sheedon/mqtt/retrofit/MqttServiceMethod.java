@@ -88,7 +88,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         Converter<ResponseBody, ResponseT> responseConverter =
                 createResponseConverter(retrofit, method, responseType);
 
-        org.sheedon.mqtt.Call.Factory callFactory = retrofit.callFactory;
+        org.sheedon.mqtt.CallFactory callFactory = retrofit.callFactory;
         if (!isKotlinSuspendFunction) {
 
             if (callAdapter.rawType() == Observable.class) {
@@ -139,14 +139,14 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     }
 
     private final RequestFactory requestFactory;
-    private final org.sheedon.mqtt.Call.Factory callFactory;
-    private final org.sheedon.mqtt.Observable.Factory observableFactory;
+    private final org.sheedon.mqtt.CallFactory callFactory;
+    private final org.sheedon.mqtt.ObservableFactory observableFactory;
     private final Converter<ResponseBody, ResponseT> responseConverter;
     private boolean isObservable;
 
     MqttServiceMethod(
             RequestFactory requestFactory,
-            org.sheedon.mqtt.Call.Factory callFactory,
+            org.sheedon.mqtt.CallFactory callFactory,
             Converter<ResponseBody, ResponseT> responseConverter) {
         this.requestFactory = requestFactory;
         this.callFactory = callFactory;
@@ -157,7 +157,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
     MqttServiceMethod(
             RequestFactory requestFactory,
-            org.sheedon.mqtt.Observable.Factory observableFactory,
+            org.sheedon.mqtt.ObservableFactory observableFactory,
             Converter<ResponseBody, ResponseT> responseConverter) {
         this.requestFactory = requestFactory;
         this.callFactory = null;
@@ -191,7 +191,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
         CallAdapted(
                 RequestFactory requestFactory,
-                org.sheedon.mqtt.Call.Factory callFactory,
+                org.sheedon.mqtt.CallFactory callFactory,
                 Converter<ResponseBody, ResponseT> responseConverter,
                 CallAdapter<ResponseT, ReturnT> callAdapter) {
             super(requestFactory, callFactory, responseConverter);
@@ -211,7 +211,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         ObservableAdapted(
                 RequestFactory requestFactory,
                 Converter<ResponseBody, ResponseT> responseConverter,
-                org.sheedon.mqtt.Observable.Factory observableFactory,
+                org.sheedon.mqtt.ObservableFactory observableFactory,
                 CallAdapter<ResponseT, ReturnT> callAdapter) {
             super(requestFactory, observableFactory, responseConverter);
             this.callAdapter = callAdapter;
@@ -228,7 +228,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
         SuspendForResponse(
                 RequestFactory requestFactory,
-                org.sheedon.mqtt.Call.Factory callFactory,
+                org.sheedon.mqtt.CallFactory callFactory,
                 Converter<ResponseBody, ResponseT> responseConverter,
                 CallAdapter<ResponseT, Call<ResponseT>> callAdapter) {
             super(requestFactory, callFactory, responseConverter);
@@ -258,7 +258,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
         SuspendForBody(
                 RequestFactory requestFactory,
-                org.sheedon.mqtt.Call.Factory callFactory,
+                org.sheedon.mqtt.CallFactory callFactory,
                 Converter<ResponseBody, ResponseT> responseConverter,
                 CallAdapter<ResponseT, Call<ResponseT>> callAdapter,
                 boolean isNullable) {

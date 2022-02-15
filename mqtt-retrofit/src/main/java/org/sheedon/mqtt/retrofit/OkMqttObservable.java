@@ -36,7 +36,7 @@ import static org.sheedon.mqtt.retrofit.Utils.throwIfFatal;
 final class OkMqttObservable<T> implements Observable<T> {
     private final RequestFactory requestFactory;
     private final Object[] args;
-    private final org.sheedon.mqtt.Observable.Factory observableFactory;
+    private final org.sheedon.mqtt.ObservableFactory observableFactory;
     private final Converter<ResponseBody, T> responseConverter;
 
     private volatile boolean canceled;
@@ -52,7 +52,7 @@ final class OkMqttObservable<T> implements Observable<T> {
 
     OkMqttObservable(RequestFactory requestFactory,
                      @Nullable Object[] args,
-                     org.sheedon.mqtt.Observable.Factory observableFactory,
+                     org.sheedon.mqtt.ObservableFactory observableFactory,
                      Converter<ResponseBody, T> responseConverter) {
         this.requestFactory = requestFactory;
         this.args = args;
