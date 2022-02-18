@@ -37,14 +37,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Call<RspModel<List<AdminCard>>> call = remoteService.getManagerList(new UserSubmitModel("get_manager_list", ""));
 //                call.publishNotCallback();
-                call.enqueue(new Callback<RspModel<List<AdminCard>>>() {
+                call.enqueue(new Callback.Call<RspModel<List<AdminCard>>>() {
                     @Override
-                    public void onResponse(Call<RspModel<List<AdminCard>>> call, Response<RspModel<List<AdminCard>>> response) {
+                    public void onResponse(Call<RspModel<List<AdminCard>>> call,
+                                           Response<RspModel<List<AdminCard>>> response) {
                         System.out.println(new Gson().toJson(response));
                     }
 
                     @Override
-                    public void onFailure(Call<RspModel<List<AdminCard>>> call, Throwable t) {
+                    public void onFailure(Call<RspModel<List<AdminCard>>> call,
+                                          Throwable t) {
                         System.out.println(t);
                     }
                 });

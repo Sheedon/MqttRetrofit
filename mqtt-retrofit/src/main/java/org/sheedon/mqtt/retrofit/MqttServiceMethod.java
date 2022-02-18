@@ -142,7 +142,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     private final org.sheedon.mqtt.CallFactory callFactory;
     private final org.sheedon.mqtt.ObservableFactory observableFactory;
     private final Converter<ResponseBody, ResponseT> responseConverter;
-    private boolean isObservable;
+    private final boolean isObservable;
 
     MqttServiceMethod(
             RequestFactory requestFactory,

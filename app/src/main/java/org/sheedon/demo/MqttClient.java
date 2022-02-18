@@ -1,23 +1,16 @@
 package org.sheedon.demo;
 
 
+import com.google.gson.Gson;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.sheedon.demo.converters.CallbackRuleConverterFactory;
-import org.sheedon.mqtt.Call;
-import org.sheedon.mqtt.Callback;
-import org.sheedon.mqtt.MqttCallbackExtendedListener;
+import org.sheedon.demo.converters.CallbackNameConverter;
 import org.sheedon.mqtt.OkMqttClient;
-import org.sheedon.mqtt.Request;
-import org.sheedon.mqtt.RequestBuilder;
 import org.sheedon.mqtt.Response;
 import org.sheedon.mqtt.SubscribeBody;
+import org.sheedon.mqtt.retrofit.Callback;
 
-import java.net.ConnectException;
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Description: java类作用描述
@@ -25,7 +18,7 @@ import java.util.Queue;
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/18 13:26
  */
-public class MqttClient implements MqttCallbackExtendedListener {
+public class MqttClient {
 
     public static final MqttClient getInstance() {
         return MqttClientHolder.INSTANCE;
@@ -44,22 +37,23 @@ public class MqttClient implements MqttCallbackExtendedListener {
     private void createClient() {
         // 创建MqttClient
 
-        String clientId = "";
-        String serverUri = "";
+        String clientId = "xxx";
+        String serverUri = "xxx";
 //        if (clientId == null || clientId.trim().equals(""))
 //            return;
 
-        Queue<SubscribeBody> subscribeBodies = new ArrayDeque<>();
-        subscribeBodies.add(SubscribeBody.build("", 1));
+        List<SubscribeBody> subscribeBodies = new ArrayList<>();
+        subscribeBodies.add(SubscribeBody.Companion.build("xxxx", 1));
+        subscribeBodies.add(SubscribeBody.Companion.build("xxxx", 1));
 
 
         if (mClient == null) {
             mClient = new OkMqttClient.Builder()
                     .clientInfo(App.getInstance(), serverUri, clientId)
-                    .subscribeBodies(subscribeBodies)
-                    .baseTopic("")
-                    .addConverterFactory(CallbackRuleConverterFactory.create())
-                    .callback(this)
+                    .subscribeBodies(null, subscribeBodies.toArray(new SubscribeBody[0]))
+                    .addBackTopicConverter(new CallbackNameConverter(new Gson()))
+                    .openLog(true,true)
+//                    .callback(this)
                     .build();
         }
     }
@@ -68,67 +62,67 @@ public class MqttClient implements MqttCallbackExtendedListener {
         return mClient;
     }
 
-    public void publish(String message, String backName, Callback<Response> responseCallback) {
+    public void publish(String message, String backName, Callback.Call<Response> responseCallback) {
 
-        if (mClient == null || !mClient.mqttClient().isConnected()) {
-            if (responseCallback != null)
-                responseCallback.onFailure(new ConnectException("未连接"));
-            return;
-        }
+//        if (mClient == null) {
+//            if (responseCallback != null)
+//                responseCallback.onFailure(new ConnectException("未连接"));
+//            return;
+//        }
 
-        Request request = new RequestBuilder()
-                .payload(message)
-                .backName(backName)
-                .build();
-
-        Call call = mClient.newCall(request);
-        call.enqueue(responseCallback);
+//        Request request = new RequestBuilder()
+//                .payload(message)
+//                .backName(backName)
+//                .build();
+//
+//        Call call = mClient.newCall(request);
+//        call.enqueue(responseCallback);
 
     }
 
     public void publish(String message, String backName) {
-        Request request = new RequestBuilder()
-                .payload(message)
-                .backName(backName)
-                .build();
-
-        Call call = mClient.newCall(request);
-        call.publishNotCallback();
-
-    }
-
-    @Override
-    public void connectComplete(boolean reconnect, String serverURI) {
+//        Request request = new RequestBuilder()
+//                .payload(message)
+//                .backName(backName)
+//                .build();
+//
+//        Call call = mClient.newCall(request);
+//        call.publishNotCallback();
 
     }
 
-    @Override
-    public void connectionLost(Throwable cause) {
-
-    }
-
-    @Override
-    public void messageArrived(String topic, MqttMessage message) {
-
-    }
-
-    @Override
-    public void deliveryComplete(IMqttDeliveryToken token) {
-
-    }
-
-    @Override
-    public void messageArrived(String topic, String data) {
-
-    }
-
-    @Override
-    public void onSuccess(IMqttToken asyncActionToken) {
-
-    }
-
-    @Override
-    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-
-    }
+//    @Override
+//    public void connectComplete(boolean reconnect, String serverURI) {
+//
+//    }
+//
+//    @Override
+//    public void connectionLost(Throwable cause) {
+//
+//    }
+//
+//    @Override
+//    public void messageArrived(String topic, MqttMessage message) {
+//
+//    }
+//
+//    @Override
+//    public void deliveryComplete(IMqttDeliveryToken token) {
+//
+//    }
+//
+//    @Override
+//    public void messageArrived(String topic, String data) {
+//
+//    }
+//
+//    @Override
+//    public void onSuccess(IMqttToken asyncActionToken) {
+//
+//    }
+//
+//    @Override
+//    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+//
+//    }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,6 +41,6 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
 
     @Override
     public T convert(ResponseBody value) {
-        return gson.fromJson(value.getBody(), type);
+        return gson.fromJson(value.getData(), type);
     }
 }

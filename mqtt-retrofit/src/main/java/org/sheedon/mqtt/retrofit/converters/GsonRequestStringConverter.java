@@ -18,7 +18,6 @@ package org.sheedon.mqtt.retrofit.converters;
 
 import com.google.gson.Gson;
 
-
 import org.sheedon.mqtt.retrofit.Converter;
 
 

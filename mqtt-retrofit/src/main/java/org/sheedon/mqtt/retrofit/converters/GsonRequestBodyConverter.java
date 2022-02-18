@@ -29,7 +29,7 @@ import org.sheedon.mqtt.retrofit.Converter;
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/24 22:41
  */
-public final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
+public final class GsonRequestBodyConverter<T> implements Converter<T, String> {
 
     private final Gson gson;
 
@@ -37,8 +37,8 @@ public final class GsonRequestBodyConverter<T> implements Converter<T, RequestBo
         this.gson = gson;
     }
 
-    @Override public RequestBody convert(T value) {
-        return new RequestBody().updateData(gson.toJson(value));
+    @Override public String convert(T value) {
+        return gson.toJson(value);
     }
 
 

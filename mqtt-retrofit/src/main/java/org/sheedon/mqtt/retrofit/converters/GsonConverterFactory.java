@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
-import org.sheedon.mqtt.RequestBody;
 import org.sheedon.mqtt.ResponseBody;
 import org.sheedon.mqtt.retrofit.Converter;
 import org.sheedon.mqtt.retrofit.Retrofit;
@@ -67,10 +66,11 @@ public class GsonConverterFactory extends Converter.Factory {
         return new GsonResponseBodyConverter<>(gson, type);
     }
 
+    @Nullable
     @Override
-    public Converter<?, RequestBody> requestBodyConverter(Type type,
-                                                          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+    public Converter<?, String> requestBodyConverter(Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
         return new GsonRequestBodyConverter<>(gson);
+
     }
 
     @Nullable

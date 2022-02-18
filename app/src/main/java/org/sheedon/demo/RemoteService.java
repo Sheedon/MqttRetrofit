@@ -2,7 +2,7 @@ package org.sheedon.demo;
 
 
 import org.sheedon.mqtt.retrofit.Call;
-import org.sheedon.mqtt.retrofit.mqtt.BACKNAME;
+import org.sheedon.mqtt.retrofit.mqtt.BACKTOPIC;
 import org.sheedon.mqtt.retrofit.mqtt.Body;
 import org.sheedon.mqtt.retrofit.mqtt.Field;
 import org.sheedon.mqtt.retrofit.mqtt.FormEncoded;
@@ -24,18 +24,19 @@ interface RemoteService {
 
     @TOPIC("")
     @PAYLOAD("{\"type\":\"get_manager_list\",\"upStartTime\":\"\"}")
-    @BACKNAME("get_manager_list")
+    @BACKTOPIC("get_manager_list")
     Call<RspModel<List<AdminCard>>> getManagerList();
 
-    @BACKNAME("get_manager_list")
+    @TOPIC("xxxxxx")
+    @BACKTOPIC("get_manager_list")
     Call<RspModel<List<AdminCard>>> getManagerList(@Body UserSubmitModel body);
 
-    @BACKNAME("get_manager_list")
+    @BACKTOPIC("get_manager_list")
     Call<RspModel<List<AdminCard>>> getManagerList(@Theme() String topic, @Body UserSubmitModel body);
 
     @FormEncoded
     @TOPIC("")
-    @BACKNAME("get_manager_list")
+    @BACKTOPIC("get_manager_list")
     Call<RspModel<List<AdminCard>>> getManagerList(@Path("deviceId") String deviceId, @Field("type") String type,
                                                    @Field("upStartTime") String upStartTime);
 }

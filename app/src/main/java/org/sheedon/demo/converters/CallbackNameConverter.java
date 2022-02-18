@@ -3,7 +3,8 @@ package org.sheedon.demo.converters;
 import com.google.gson.Gson;
 
 import org.sheedon.demo.RspModel;
-import org.sheedon.mqtt.DataConverter;
+import org.sheedon.mqtt.ResponseBody;
+import org.sheedon.rr.core.DataConverter;
 
 
 /**
@@ -12,29 +13,27 @@ import org.sheedon.mqtt.DataConverter;
  * @Email: sheedonsun@163.com
  * @Date: 2020/3/11 0:45
  */
-public class CallbackNameConverter implements DataConverter<String, String> {
-    String topic;
+public class CallbackNameConverter implements DataConverter<ResponseBody, String> {
     Gson gson;
 
-    public CallbackNameConverter(String topic,Gson gson) {
-        this.topic = topic;
+    public CallbackNameConverter(Gson gson) {
         this.gson = gson;
     }
 
     @Override
-    public String convert(String value) {
-        if (value == null || value.isEmpty())
+    public String convert(ResponseBody value) {
+        if (value == null || value.getData() == null || value.getData().isEmpty())
             return "";
 
-        RspModel rspModel = null;
+        RspModel<?> rspModel = null;
         try {
-            rspModel = gson.fromJson(value, RspModel.class);
+            rspModel = gson.fromJson(value.getData(), RspModel.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
         if (rspModel == null || rspModel.getType() == null || rspModel.getType().equals(""))
             return "";
-
+        //value.getTopic()
         return rspModel.getType();
     }
 }

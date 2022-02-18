@@ -43,7 +43,7 @@ public final class Response<T> {
      */
     public static <T> Response<T> success(@Nullable T body, org.sheedon.mqtt.Response rawResponse) {
         Objects.requireNonNull(rawResponse, "rawResponse == null");
-        if (rawResponse.message().isEmpty()) {
+        if (!rawResponse.message().isEmpty()) {
             throw new IllegalArgumentException("rawResponse must be successful response");
         }
         return new Response<>(rawResponse, body, null);
