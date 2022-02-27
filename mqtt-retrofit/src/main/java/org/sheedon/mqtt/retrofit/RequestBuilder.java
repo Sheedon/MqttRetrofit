@@ -47,13 +47,13 @@ import java.util.concurrent.TimeUnit;
 public class RequestBuilder {
 
     private String topic;
-    private final String relativePayload;
+    private String relativePayload;
     private final String charset;
     private final int qos;
     private final boolean retained;
     private final long timeout;
     private final TimeUnit timeUnit;
-    private final String backTopic;
+    private String backTopic;
     private final Request.Builder requestBuilder;
     private @Nullable
     FormBody.Builder formBuilder;
@@ -87,13 +87,27 @@ public class RequestBuilder {
         topic = value;
     }
 
-
-    void addPathParam(String name, String value, boolean encoded) {
+    void addTopicPathParam(String name, String value, boolean encoded) {
         if (topic == null) {
             // The relative URL is cleared when the first query parameter is set.
             throw new AssertionError();
         }
         topic = topic.replace("{" + name + "}", value);
+    }
+
+    void addBackTopicPathParam(String name, String value, boolean encoded) {
+        if (backTopic == null) {
+            backTopic = "";
+        }
+        backTopic = backTopic.replace("{" + name + "}", value);
+    }
+
+    void addPathParam(String name, String value, boolean encoded) {
+        if (relativePayload == null) {
+            // The relative URL is cleared when the first query parameter is set.
+            relativePayload = "";
+        }
+        relativePayload = relativePayload.replace("{" + name + "}", value);
     }
 
     void addFormField(String name, String value, boolean encoded) {

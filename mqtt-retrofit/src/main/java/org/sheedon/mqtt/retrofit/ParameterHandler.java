@@ -31,6 +31,8 @@ package org.sheedon.mqtt.retrofit;
 
 import androidx.annotation.Nullable;
 
+import org.sheedon.mqtt.retrofit.mqtt.PathType;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Objects;
@@ -82,11 +84,13 @@ abstract class ParameterHandler<T> {
 
     static final class Path<T> extends ParameterHandler<T> {
         private final String name;
+        private final int pathType;
         private final Converter<T, String> valueConverter;
         private final boolean encoded;
 
-        Path(String name, Converter<T, String> valueConverter, boolean encoded) {
+        Path(String name, int pathType, Converter<T, String> valueConverter, boolean encoded) {
             this.name = Objects.requireNonNull(name, "name == null");
+            this.pathType = pathType;
             this.valueConverter = valueConverter;
             this.encoded = encoded;
         }
@@ -97,7 +101,13 @@ abstract class ParameterHandler<T> {
                 throw new IllegalArgumentException(
                         "Path parameter \"" + name + "\" value must not be null.");
             }
-            builder.addPathParam(name, valueConverter.convert(value), encoded);
+            if (pathType == PathType.TOPIC) {
+                builder.addTopicPathParam(name, valueConverter.convert(value), encoded);
+            } else if (pathType == PathType.BACK_TOPIC) {
+                builder.addBackTopicPathParam(name, valueConverter.convert(value), encoded);
+            } else if (pathType == PathType.PAYLOAD) {
+                builder.addPathParam(name, valueConverter.convert(value), encoded);
+            }
         }
     }
 

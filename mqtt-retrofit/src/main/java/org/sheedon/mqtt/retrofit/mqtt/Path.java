@@ -24,12 +24,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Path content, replace the content specified in TOPIC
- * @TOPIC("yh_classify/device/recyclable/data/{deviceId}}")
- * Call<> getManagerList(@Path("deviceId") String deviceId, @Field("type") String type,
- *                       @Field("upStartTime") String upStartTime);
  *
+ * @TOPIC("yh_classify/device/recyclable/data/{deviceId}}") Call<> getManagerList(@Path("deviceId") String deviceId, @Field("type") String type,
+ * @Field("upStartTime") String upStartTime);
+ * <p>
  * The deviceId in path replaces the deviceId in TOPIC
- *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 10:35
@@ -38,6 +37,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target(PARAMETER)
 public @interface Path {
+
+    @PathType int type() default PathType.TOPIC;
 
     /**
      * Used to replace the field corresponding to the current value in TOPIC

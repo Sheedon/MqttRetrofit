@@ -39,6 +39,7 @@ import org.sheedon.mqtt.retrofit.mqtt.Field;
 import org.sheedon.mqtt.retrofit.mqtt.FormEncoded;
 import org.sheedon.mqtt.retrofit.mqtt.PAYLOAD;
 import org.sheedon.mqtt.retrofit.mqtt.Path;
+import org.sheedon.mqtt.retrofit.mqtt.PathType;
 import org.sheedon.mqtt.retrofit.mqtt.QOS;
 import org.sheedon.mqtt.retrofit.mqtt.RETAINED;
 import org.sheedon.mqtt.retrofit.mqtt.TIMEOUT;
@@ -278,19 +279,20 @@ final class RequestFactory {
 
             } else if (annotation instanceof Path) {
                 validateResolvableType(p, type);
-                if (gotQuery) {
+                Path path = (Path) annotation;
+                if (path.type() == PathType.PAYLOAD && gotQuery) {
                     throw Utils.parameterError(method, p, "A @Path parameter must not come after a @Field.");
                 }
-                if (gotTheme) {
+                if (path.type() == PathType.TOPIC && gotTheme) {
                     throw Utils.parameterError(method, p, "@Path parameters may not be used with @Theme.");
                 }
                 gotPath = true;
 
-                Path path = (Path) annotation;
                 String name = path.value();
+                int pathType = path.type();
 
                 Converter<?, String> converter = retrofit.stringConverter(type, annotations);
-                return new ParameterHandler.Path<>(name, converter, path.encoded());
+                return new ParameterHandler.Path<>(name,pathType, converter, path.encoded());
 
             } else if (annotation instanceof Field) {
                 if (gotPayload) {
