@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2020 Sheedon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,9 @@ public final class GsonRequestStringConverter<T> implements Converter<T, String>
 
     @Override
     public String convert(T value) {
+        if(value instanceof String){
+            return (String) value;
+        }
         return gson.toJson(value);
     }
 
