@@ -16,10 +16,21 @@ import java.lang.annotation.Retention;
  */
 @Documented
 @Retention(SOURCE)
-@IntRange(from = PathType.TOPIC,to = PathType.PAYLOAD)
+@IntRange(from = PathType.TYPE_MIN, to = PathType.TYPE_MAX)
 public @interface PathType {
 
+    // 请求主题路径
     int TOPIC = 0;
-    int BACK_TOPIC = 1;
+    // 订阅主题路径
+    int SUBSCRIBE = 1;
+    // 有效载荷路径
     int PAYLOAD = 2;
+    // 关键字路径
+    int KEYWORD = 3;
+
+
+    // 最小类型
+    int TYPE_MIN = TOPIC;
+    // 最大类型
+    int TYPE_MAX = KEYWORD;
 }

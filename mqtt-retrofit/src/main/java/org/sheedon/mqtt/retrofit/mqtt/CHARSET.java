@@ -10,12 +10,15 @@ package org.sheedon.mqtt.retrofit.mqtt;
 public @interface CHARSET {
 
     /**
-     * Encoding format name
+     * Encoding charset format name
      */
     String value() default "";
 
     /**
-     * Whether to enable the current encoding format
+     * Whether the messaging engine should keep publish messages.
+     * Sending a message with reserved set to `true` and using an empty byte array as payload,
+     * e.g. `new byte[0]` will clear the reserved message from the server.
+     * The default value is false.
      */
-    boolean encoded() default false;
+    boolean autoEncode() default false;
 }

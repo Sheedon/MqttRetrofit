@@ -22,11 +22,13 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import org.sheedon.mqtt.SubscriptionType;
+
 /**
- * callback topic
+ * Subscribe topic
  * For example：
- * @BACKTOPIC("xxx") Call<> getManagerList();
  *
+ * @BACKTOPIC("xxx") Call<> getManagerList();
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 12:48
@@ -34,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface BACKTOPIC {
+public @interface SUBSCRIBE {
 
     /**
      * The receiving topic bound to a message feedback operation
@@ -45,4 +47,28 @@ public @interface BACKTOPIC {
      * then the value here should be filled with test_ack
      */
     String value();
+
+    /**
+     * whether for topic value changes happened
+     * if isSplice is false，topic = baseTopic + topic.value
+     */
+    boolean isSplice() default false;
+
+    /**
+     * mqtt quality of service value in the range of 0 to 2
+     */
+    @QosScope
+    int qos() default 0;
+
+    /**
+     * Whether to keep the subscription record,
+     * which is used to automatically subscribe to the current topic after mqtt reconnects.
+     */
+    boolean attachRecord() default false;
+
+    /**
+     * Subscription type, defined by {@link SubscriptionType.REMOTE} and {@link SubscriptionType.LOCAL} .
+     * default value is {@link SubscriptionType.REMOTE}
+     */
+    SubscriptionType subscriptionType() default SubscriptionType.REMOTE;
 }

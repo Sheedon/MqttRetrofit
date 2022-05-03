@@ -38,15 +38,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 public @interface Path {
 
+    /**
+     * Configure path type.
+     * {@link PathType.TOPIC}: replace the associated fields in {@link TOPIC}
+     * {@link PathType.SUBSCRIBE}: replace the associated fields in {@link SUBSCRIBE}
+     * {@link PathType.PAYLOAD}: replace the associated fields in {@link PAYLOAD}
+     * {@link PathType.KEYWORD}: replace the associated fields in {@link KEYWORD}
+     */
     @PathType int type() default PathType.TOPIC;
 
     /**
      * Used to replace the field corresponding to the current value in TOPIC
      */
     String value();
-
-    /**
-     * Specifies whether the argument value to the annotated method parameter is already URL encoded.
-     */
-    boolean encoded() default false;
 }

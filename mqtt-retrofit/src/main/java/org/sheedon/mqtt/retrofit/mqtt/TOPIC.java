@@ -44,4 +44,16 @@ public @interface TOPIC {
      * if isSplice is false，topic = baseTopic + topic.value
      */
     boolean isSplice() default false;
+
+    /**
+     * mqtt quality of service value in the range of 0 to 2
+     */
+    @QosScope
+    int qos() default 0;
+
+    /**
+     * Whether the mqtt message is retained,
+     * value == true, the request data will be retained in the mqtt service
+     */
+    boolean retained() default false;
 }
