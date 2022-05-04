@@ -39,7 +39,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * 转化实体
+ * Convert objects to and from their representation in MQTT. Instances are created by {@linkplain
+ * Factory a factory} which is {@linkplain Retrofit.Builder#addConverterFactory(Factory) installed}
+ * into the {@link Retrofit} instance.
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -53,7 +55,7 @@ public interface Converter<F, T> {
      */
     abstract class Factory {
         /**
-         * Returns a {@link Converter} for converting an HTTP response body to {@code type}, or null if
+         * Returns a {@link Converter} for converting an MQTT response body to {@code type}, or null if
          * {@code type} cannot be handled by this factory. This is used to create converters for
          * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
          * declaration.

@@ -42,7 +42,6 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
      */
     static <ResponseT, ReturnT> MqttServiceMethod<ResponseT, ReturnT> parseAnnotations(
             Retrofit retrofit, Method method, RequestFactory requestFactory) {
-
         boolean isKotlinSuspendFunction = requestFactory.isKotlinSuspendFunction;
         boolean continuationWantsResponse = false;
         boolean continuationBodyNullable = false;
@@ -177,8 +176,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         return adapt(call, args);
     }
 
-    protected @Nullable
-    ReturnT adapt(Call<ResponseT> call, Object[] args) {
+    protected @Nullable ReturnT adapt(Call<ResponseT> call, Object[] args) {
         throw new RuntimeException("Please implement the method of adapt Call");
     }
 
@@ -274,7 +272,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
             //noinspection unchecked Checked by reflection inside RequestFactory.
             Continuation<ResponseT> continuation = (Continuation<ResponseT>) args[args.length - 1];
 
-            // Calls to OkHttp Call.enqueue() like those inside await and awaitNullable can sometimes
+            // Calls to OkMqtt Call.enqueue() like those inside await and awaitNullable can sometimes
             // invoke the supplied callback with an exception before the invoking stack frame can return.
             // Coroutines will intercept the subsequent invocation of the Continuation and throw the
             // exception synchronously. A Java Proxy cannot throw checked exceptions without them being

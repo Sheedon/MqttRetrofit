@@ -31,6 +31,8 @@ package org.sheedon.mqtt.retrofit;
 
 import androidx.annotation.Nullable;
 
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.internal.wire.MqttSubscribe;
 import org.sheedon.mqtt.ResponseBody;
 
 import java.util.Objects;
@@ -47,8 +49,32 @@ public final class Response<T> {
     /**
      * Create a synthetic successful response with {@code body} as the deserialized body.
      */
-    public static <T> Response<T> success(@Nullable String backTopic, @Nullable T body) {
-        return success(body, new org.sheedon.mqtt.Response(backTopic, "OK"));
+    public static <T> Response<T> success(@Nullable String topic,
+                                          @Nullable T body) {
+        return success(body,
+                new org.sheedon.mqtt.Response("",
+                        new ResponseBody(topic, new MqttMessage())));
+    }
+
+    /**
+     * Create a synthetic successful response with {@code body} as the deserialized body.
+     */
+    public static <T> Response<T> success(@Nullable String keyword,
+                                          @Nullable String topic,
+                                          @Nullable T body) {
+        return success(body,
+                new org.sheedon.mqtt.Response(keyword,
+                        new ResponseBody(topic, new MqttMessage())));
+    }
+
+    /**
+     * Create a synthetic successful response with {@code body} as the deserialized body.
+     */
+    public static <T> Response<T> success(@Nullable String topic,
+                                          @Nullable MqttSubscribe body) {
+        return new Response<>(new org.sheedon.mqtt.Response("",
+                new ResponseBody(topic, new MqttMessage((body != null ? body.toString() : "").getBytes()))),
+                null, null);
     }
 
     /**
@@ -57,40 +83,35 @@ public final class Response<T> {
      */
     public static <T> Response<T> success(@Nullable T body, org.sheedon.mqtt.Response rawResponse) {
         Objects.requireNonNull(rawResponse, "rawResponse == null");
-        if (!rawResponse.message().isEmpty()) {
-            throw new IllegalArgumentException("rawResponse must be successful response");
-        }
         return new Response<>(rawResponse, body, null);
     }
 
     /**
-     * Create a synthetic error response with an RR-binder status message of {@code message}
-     * and {@code body} as the error body.
+     * Create a synthetic error response with {@code body} as the error body.
      */
-    public static <T> Response<T> error(@Nullable String backTopic, @Nullable String message, ResponseBody body) {
-        if (message.isEmpty()) throw new IllegalArgumentException(message);
-        return error(body, new org.sheedon.mqtt.Response(backTopic, message, body));
+    public static <T> Response<T> error(@Nullable String topic, ResponseBody body) {
+        return new Response<>(null, null,
+                new org.sheedon.mqtt.Response("",
+                        new ResponseBody(topic, new MqttMessage())));
     }
 
     /**
      * Create an error response from {@code rawResponse} with {@code body} as the error body.
      */
-    public static <T> Response<T> error(ResponseBody body, org.sheedon.mqtt.Response rawResponse) {
-        Objects.requireNonNull(rawResponse, "rawResponse == null");
-        if (rawResponse.message().isEmpty()) {
-            throw new IllegalArgumentException("rawResponse should not be successful response");
-        }
-        return new Response<>(rawResponse, null, body);
+    public static <T> Response<T> error(@Nullable String keyword,
+                                        @Nullable String topic,
+                                        ResponseBody body) {
+        return new Response<>(null, null,
+                new org.sheedon.mqtt.Response(keyword,
+                        new ResponseBody(topic, new MqttMessage())));
     }
 
     private final org.sheedon.mqtt.Response rawResponse;
-    private final @Nullable
-    T body;
-    private final @Nullable
-    ResponseBody errorBody;
+    private final T body;
+    private final org.sheedon.mqtt.Response errorBody;
 
     private Response(org.sheedon.mqtt.Response rawResponse, @Nullable T body,
-                     @Nullable ResponseBody errorBody) {
+                     @Nullable org.sheedon.mqtt.Response errorBody) {
         this.rawResponse = rawResponse;
         this.body = body;
         this.errorBody = errorBody;
@@ -106,22 +127,22 @@ public final class Response<T> {
     /**
      * MQTT status backTopic or "" if unknown.
      */
-    public String backTopic() {
-        return rawResponse.backTopic();
+    public String topic() {
+        if (rawResponse != null && rawResponse.getBody() != null) {
+            return rawResponse.getBody().getTopic();
+        }
+        if (errorBody != null && errorBody.getBody() != null) {
+            return errorBody.getBody().getTopic();
+        }
+        return "";
     }
 
-    /**
-     * MQTT status message or null if unknown.
-     */
-    public String message() {
-        return rawResponse.message();
-    }
 
     /**
-     * Returns true if {@link #message()} is message not "".
+     * Returns true if rawResponse is not null.
      */
     public boolean isSuccessful() {
-        return rawResponse.message().isEmpty();
+        return rawResponse != null;
     }
 
     /**
@@ -135,15 +156,16 @@ public final class Response<T> {
     /**
      * The raw response body of an {@linkplain #isSuccessful() unsuccessful} response.
      */
-    public @Nullable
-    ResponseBody errorBody() {
+    public org.sheedon.mqtt.Response errorBody() {
         return errorBody;
     }
 
     @Override
     public String toString() {
-        return rawResponse.toString();
+        return "Response{" +
+                "rawResponse=" + rawResponse +
+                ", body=" + body +
+                ", errorBody=" + errorBody +
+                '}';
     }
-
-
 }

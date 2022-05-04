@@ -29,20 +29,14 @@
  */
 package org.sheedon.mqtt.retrofit;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.ChecksSdkIntAtLeast;
 import androidx.annotation.Nullable;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -64,10 +58,7 @@ abstract class Platform {
     private static Platform findPlatform() {
         switch (System.getProperty("java.vm.name")) {
             case "Dalvik":
-                if (Android24.isSupported()) {
-                    return new Android24();
-                }
-                return new Android21();
+                return new Android();
 
 //            case "RoboVM":
 //                return new RoboVm();
@@ -95,10 +86,11 @@ abstract class Platform {
 
     abstract boolean isDefaultMethod(Method method);
 
-    abstract @Nullable Object invokeDefaultMethod(
+    abstract @Nullable
+    Object invokeDefaultMethod(
             Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable;
 
-    private static final class Android21 extends Platform{
+    private static final class Android extends Platform {
 
         @Override
         boolean isDefaultMethod(Method method) {
@@ -125,62 +117,6 @@ abstract class Platform {
         @Override
         List<? extends Converter.Factory> createDefaultConverterFactories() {
             return emptyList();
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.N)
-    private static final class Android24 extends Platform {
-        @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
-        static boolean isSupported() {
-            return Build.VERSION.SDK_INT >= 24;
-        }
-
-        private @Nullable
-        Constructor<MethodHandles.Lookup> lookupConstructor;
-
-        @Override
-        Executor defaultCallbackExecutor() {
-            return MainThreadExecutor.INSTANCE;
-        }
-
-        @Override
-        List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-                @Nullable Executor callbackExecutor) {
-            return asList(
-                    new CompletableFutureCallAdapterFactory(),
-                    new DefaultCallAdapterFactory(callbackExecutor));
-        }
-
-        @Override
-        List<? extends Converter.Factory> createDefaultConverterFactories() {
-            return singletonList(new OptionalConverterFactory());
-        }
-
-        @Override
-        public boolean isDefaultMethod(Method method) {
-            return method.isDefault();
-        }
-
-        @Nullable
-        @Override
-        public Object invokeDefaultMethod(
-                Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
-            if (Build.VERSION.SDK_INT < 26) {
-                throw new UnsupportedOperationException(
-                        "Calling default methods on API 24 and 25 is not supported");
-            }
-            Constructor<MethodHandles.Lookup> lookupConstructor = this.lookupConstructor;
-            if (lookupConstructor == null) {
-                //noinspection JavaReflectionMemberAccess
-                lookupConstructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
-                lookupConstructor.setAccessible(true);
-                this.lookupConstructor = lookupConstructor;
-            }
-            return lookupConstructor
-                    .newInstance(declaringClass, -1 /* trusted */)
-                    .unreflectSpecial(method, declaringClass)
-                    .bindTo(proxy)
-                    .invokeWithArguments(args);
         }
     }
 

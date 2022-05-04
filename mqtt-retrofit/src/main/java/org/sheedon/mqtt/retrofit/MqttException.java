@@ -29,31 +29,28 @@ import java.util.Objects;
 public class MqttException extends RuntimeException {
     private static String getMessage(Response<?> response) {
         Objects.requireNonNull(response, "response == null");
-        return "MQTT " + response.backTopic() + " " + response.message();
+        return "MQTT " + response.topic() + " " + response.errorBody();
     }
 
-    private final String backTopic;
-    private final String message;
+    private final String topic;
     private final transient Response<?> response;
 
     public MqttException(Response<?> response) {
         super(getMessage(response));
-        this.backTopic = response.backTopic();
-        this.message = response.message();
+        this.topic = response.topic();
         this.response = response;
     }
 
-    /** MQTT status topic. */
-    public String backTopic() {
-        return backTopic;
+    /**
+     * MQTT status topic.
+     */
+    public String topic() {
+        return topic;
     }
 
-    /** MQTT status message. */
-    public String message() {
-        return message;
-    }
-
-    /** The full MQTT response. This may be null if the exception was serialized. */
+    /**
+     * The full MQTT response. This may be null if the exception was serialized.
+     */
     public @Nullable
     Response<?> response() {
         return response;

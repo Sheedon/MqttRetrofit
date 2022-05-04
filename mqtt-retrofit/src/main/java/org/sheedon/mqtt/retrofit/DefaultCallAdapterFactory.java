@@ -29,14 +29,17 @@
  */
 package org.sheedon.mqtt.retrofit;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.eclipse.paho.client.mqttv3.internal.wire.MqttSubscribe;
 import org.sheedon.mqtt.Request;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -91,7 +94,8 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
             @Override
             public Observable<Object> adapt(Observable<Object> observable) {
-                return new ExecutorCallbackObservable<>(callbackExecutor,observable);
+                return executor == null ? observable :
+                        new ExecutorCallbackObservable<>(callbackExecutor, observable);
             }
         };
     }
@@ -132,30 +136,31 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         }
 
         @Override
-        public void enqueue(final Callback.Call<T> callback) {
+        public void enqueue(final Callback<T> callback) {
             if (callback == null) {
                 delegate.publish();
                 return;
             }
 
-            delegate.enqueue(new Callback.Call<T>() {
-                @Override
-                public void onResponse(Call<T> call, final Response<T> response) {
-                    callbackExecutor.execute(() -> {
-                        if (delegate.isCanceled()) {
-                            // Emulate OkHttp's behavior of throwing/delivering an IOException on cancellation.
-                            callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));
-                        } else {
-                            callback.onResponse(ExecutorCallbackCall.this, response);
+            delegate.enqueue(
+                    new Callback<T>() {
+                        @Override
+                        public void onResponse(Call<T> call, final Response<T> response) {
+                            callbackExecutor.execute(() -> {
+                                if (delegate.isCanceled()) {
+                                    // Emulate OkMqtt's behavior of throwing/delivering an IOException on cancellation.
+                                    callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));
+                                } else {
+                                    callback.onResponse(ExecutorCallbackCall.this, response);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(Call<T> call, final Throwable t) {
+                            callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackCall.this, t));
                         }
                     });
-                }
-
-                @Override
-                public void onFailure(Call<T> call, final Throwable t) {
-                    callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackCall.this, t));
-                }
-            });
         }
     }
 
@@ -190,30 +195,90 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         }
 
         @Override
-        public void subscribe(final Callback.Observable<T> callback) {
-            if (callback == null) {
-                return;
-            }
+        public void subscribe() {
+            delegate.subscribe();
+        }
 
-            delegate.subscribe(new Callback.Observable<T>() {
+        @Override
+        public void subscribe(final Consumer<T> consumer) {
+            Objects.requireNonNull(consumer, "consumer == null");
 
+            delegate.subscribe(new Consumer<T>() {
                 @Override
-                public void onResponse(Observable<T> call, final Response<T> response) {
+                public void onResponse(@NonNull Observable<T> observable, @Nullable Response<T> response) {
                     callbackExecutor.execute(() -> {
                         if (delegate.isCanceled()) {
-                            // Emulate OkHttp's behavior of throwing/delivering an IOException on cancellation.
-                            callback.onFailure(ExecutorCallbackObservable.this, new IOException("Canceled"));
+                            // Emulate OkMqtt's behavior of throwing/delivering an IOException on cancellation.
+                            consumer.onFailure(ExecutorCallbackObservable.this, new IOException("Canceled"));
                         } else {
-                            callback.onResponse(ExecutorCallbackObservable.this, response);
+                            consumer.onResponse(ExecutorCallbackObservable.this, response);
                         }
                     });
                 }
 
                 @Override
-                public void onFailure(Observable<T> call, final Throwable t) {
-                    callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackObservable.this, t));
+                public void onFailure(@NonNull Observable<T> observable, @Nullable Throwable t) {
+                    callbackExecutor.execute(() -> consumer.onFailure(ExecutorCallbackObservable.this, t));
+                }
+            });
+        }
+
+        @Override
+        public void subscribe(@NonNull Subscribe<T> subscribe) {
+            Objects.requireNonNull(subscribe, "subscribe == null");
+            delegate.subscribe(new Subscribe<T>() {
+                @Override
+                public void onResponse(@NonNull Observable<T> observable, @Nullable MqttSubscribe response) {
+                    callbackExecutor.execute(() -> {
+                        if (delegate.isCanceled()) {
+                            // Emulate OkMqtt's behavior of throwing/delivering an IOException on cancellation.
+                            subscribe.onFailure(ExecutorCallbackObservable.this, new IOException("Canceled"));
+                        } else {
+                            subscribe.onResponse(ExecutorCallbackObservable.this, response);
+                        }
+                    });
                 }
 
+                @Override
+                public void onFailure(@NonNull Observable<T> observable, @Nullable Throwable t) {
+                    callbackExecutor.execute(() -> subscribe.onFailure(ExecutorCallbackObservable.this, t));
+                }
+            });
+        }
+
+        @Override
+        public void subscribe(@NonNull FullConsumer<T> consumer) {
+            Objects.requireNonNull(consumer, "consumer == null");
+
+            delegate.subscribe(new FullConsumer<T>() {
+                @Override
+                public void onResponse(@NonNull Observable<T> observable, @Nullable Response<T> response) {
+                    callbackExecutor.execute(() -> {
+                        if (delegate.isCanceled()) {
+                            // Emulate OkMqtt's behavior of throwing/delivering an IOException on cancellation.
+                            consumer.onFailure(ExecutorCallbackObservable.this, new IOException("Canceled"));
+                        } else {
+                            consumer.onResponse(ExecutorCallbackObservable.this, response);
+                        }
+                    });
+                }
+
+                @Override
+                public void onResponse(@NonNull Observable<T> observable, @Nullable MqttSubscribe response) {
+                    callbackExecutor.execute(() -> {
+                        if (delegate.isCanceled()) {
+                            // Emulate OkMqtt's behavior of throwing/delivering an IOException on cancellation.
+                            consumer.onFailure(ExecutorCallbackObservable.this, new IOException("Canceled"));
+                        } else {
+                            consumer.onResponse(ExecutorCallbackObservable.this, response);
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(@NonNull Observable<T> observable, @Nullable Throwable t) {
+                    callbackExecutor.execute(() -> consumer.onFailure(ExecutorCallbackObservable.this, t));
+                }
             });
         }
     }
