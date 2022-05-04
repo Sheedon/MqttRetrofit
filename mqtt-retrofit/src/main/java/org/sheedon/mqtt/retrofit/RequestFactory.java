@@ -32,7 +32,9 @@ package org.sheedon.mqtt.retrofit;
 import androidx.annotation.Nullable;
 
 import org.sheedon.mqtt.Request;
-import org.sheedon.mqtt.retrofit.mqtt.BACKTOPIC;
+import org.sheedon.mqtt.SubscriptionType;
+import org.sheedon.mqtt.retrofit.mqtt.KEYWORD;
+import org.sheedon.mqtt.retrofit.mqtt.SUBSCRIBE;
 import org.sheedon.mqtt.retrofit.mqtt.Body;
 import org.sheedon.mqtt.retrofit.mqtt.CHARSET;
 import org.sheedon.mqtt.retrofit.mqtt.Field;
@@ -40,11 +42,9 @@ import org.sheedon.mqtt.retrofit.mqtt.FormEncoded;
 import org.sheedon.mqtt.retrofit.mqtt.PAYLOAD;
 import org.sheedon.mqtt.retrofit.mqtt.Path;
 import org.sheedon.mqtt.retrofit.mqtt.PathType;
-import org.sheedon.mqtt.retrofit.mqtt.QOS;
-import org.sheedon.mqtt.retrofit.mqtt.RETAINED;
 import org.sheedon.mqtt.retrofit.mqtt.TIMEOUT;
 import org.sheedon.mqtt.retrofit.mqtt.TOPIC;
-import org.sheedon.mqtt.retrofit.mqtt.Theme;
+import org.sheedon.mqtt.retrofit.mqtt.Subject;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -73,31 +73,50 @@ final class RequestFactory {
     final boolean isKotlinSuspendFunction;
 
     private final String topic;
-    private final String relativePayload;
-    private final String charset;
+    private final boolean isReplace;
     private final int qos;
     private final boolean retained;
+
     private final long timeout;
     private final TimeUnit timeUnit;
-    private final String backTopic;
+
+    private final String relativePayload;
+
+    private final String subscribeTopic;
+    private final boolean subscribeReplace;
+    private final int subscribeQos;
+    private final boolean attachRecord;
+    private final SubscriptionType subscriptionType;
+    private final String keyword;
+
+    private final String charset;
+    private final boolean autoEncode;
 
     RequestFactory(Builder builder) {
         method = builder.method;
         isFormEncoded = builder.isFormEncoded;
         parameterHandlers = builder.parameterHandlers;
         isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
+
         topic = builder.topic;
-        relativePayload = builder.relativePayload;
-        if (builder.isCharsetEncoded) {
-            charset = builder.charset;
-        } else {
-            charset = "";
-        }
+        isReplace = builder.isReplace;
         qos = builder.qos;
         retained = builder.retained;
+
         timeout = builder.timeout;
         timeUnit = builder.timeUnit;
-        backTopic = builder.backTopic;
+
+        relativePayload = builder.relativePayload;
+
+        subscribeTopic = builder.subscribeTopic;
+        subscribeReplace = builder.subscribeReplace;
+        subscribeQos = builder.subscribeQos;
+        attachRecord = builder.attachRecord;
+        subscriptionType = builder.subscriptionType;
+        keyword = builder.keyword;
+
+        charset = builder.charset;
+        autoEncode = builder.autoEncode;
     }
 
     Request create(Object[] args) throws IOException {
@@ -114,8 +133,10 @@ final class RequestFactory {
         }
 
         RequestBuilder requestBuilder =
-                new RequestBuilder(topic, relativePayload, charset, qos, retained,
-                        timeout, timeUnit, backTopic, isFormEncoded);
+                new RequestBuilder(topic, isReplace, qos, retained,
+                        timeout, timeUnit, relativePayload,
+                        subscribeTopic, subscribeReplace, subscribeQos, attachRecord,
+                        subscriptionType, keyword, charset, autoEncode,isFormEncoded);
 
         if (isKotlinSuspendFunction) {
             // The Continuation is the last parameter and the handlers array contains null at that index.
@@ -139,21 +160,29 @@ final class RequestFactory {
 
         String topic = "";
         boolean isReplace;
-        boolean gotTheme;
 
-        String relativePayload = "";
-        boolean gotPayload;
-        String charset;
-        boolean isCharsetEncoded = false;
+        boolean gotSubject;
 
         int qos = 0;
         boolean retained = false;
 
         long timeout;
         TimeUnit timeUnit = TimeUnit.SECONDS;
-        String backTopic;
 
-        boolean gotPath;
+        String relativePayload = "";
+        boolean gotPayload;
+
+        String charset;
+        boolean autoEncode = false;
+
+        String subscribeTopic;
+        boolean subscribeReplace;
+        int subscribeQos;
+        boolean attachRecord;
+        SubscriptionType subscriptionType;
+        String keyword;
+
+
         boolean gotQuery;
         boolean gotBody;
         boolean isFormEncoded;
@@ -200,24 +229,28 @@ final class RequestFactory {
         private void parseMethodAnnotation(Annotation annotation) {
             if (annotation instanceof TOPIC) {
                 topic = ((TOPIC) annotation).value();
+                qos = ((TOPIC) annotation).qos();
+                retained = ((TOPIC) annotation).retained();
                 isReplace = ((TOPIC) annotation).isSplice();
             } else if (annotation instanceof PAYLOAD) {
                 gotPayload = true;
                 relativePayload = ((PAYLOAD) annotation).value();
             } else if (annotation instanceof CHARSET) {
                 charset = ((CHARSET) annotation).value();
-                isCharsetEncoded = ((CHARSET) annotation).encoded();
-            } else if (annotation instanceof QOS) {
-                qos = ((QOS) annotation).value();
-            } else if (annotation instanceof RETAINED) {
-                retained = ((RETAINED) annotation).value();
+                autoEncode = ((CHARSET) annotation).autoEncode();
             } else if (annotation instanceof TIMEOUT) {
                 timeout = ((TIMEOUT) annotation).value();
                 timeUnit = ((TIMEOUT) annotation).unit();
-            } else if (annotation instanceof BACKTOPIC) {
-                backTopic = ((BACKTOPIC) annotation).value();
+            } else if (annotation instanceof SUBSCRIBE) {
+                subscribeTopic = ((SUBSCRIBE) annotation).value();
+                subscribeReplace = ((SUBSCRIBE) annotation).isSplice();
+                subscribeQos = ((SUBSCRIBE) annotation).qos();
+                attachRecord = ((SUBSCRIBE) annotation).attachRecord();
+                subscriptionType = ((SUBSCRIBE) annotation).subscriptionType();
             } else if (annotation instanceof FormEncoded) {
                 isFormEncoded = true;
+            } else if (annotation instanceof KEYWORD) {
+                keyword = ((KEYWORD) annotation).value();
             }
         }
 
@@ -263,13 +296,13 @@ final class RequestFactory {
         @Nullable
         private ParameterHandler<?> parseParameterAnnotation(
                 int p, Type type, Annotation[] annotations, Annotation annotation) {
-            if (annotation instanceof Theme) {
+            if (annotation instanceof Subject) {
                 validateResolvableType(p, type);
-                if (gotTheme) {
+                if (gotSubject) {
                     throw Utils.parameterError(method, p, "Multiple @Theme method annotations found.");
                 }
 
-                gotTheme = true;
+                gotSubject = true;
 
                 if (type == String.class) {
                     return new ParameterHandler.RelativeTopic();
@@ -280,19 +313,18 @@ final class RequestFactory {
             } else if (annotation instanceof Path) {
                 validateResolvableType(p, type);
                 Path path = (Path) annotation;
+                if (path.type() == PathType.TOPIC && gotSubject) {
+                    throw Utils.parameterError(method, p, "@Path parameters may not be used with @Theme.");
+                }
                 if (path.type() == PathType.PAYLOAD && gotQuery) {
                     throw Utils.parameterError(method, p, "A @Path parameter must not come after a @Field.");
                 }
-                if (path.type() == PathType.TOPIC && gotTheme) {
-                    throw Utils.parameterError(method, p, "@Path parameters may not be used with @Theme.");
-                }
-                gotPath = true;
 
                 String name = path.value();
                 int pathType = path.type();
 
                 Converter<?, String> converter = retrofit.stringConverter(type, annotations);
-                return new ParameterHandler.Path<>(name,pathType, converter, path.encoded());
+                return new ParameterHandler.Path<>(name, pathType, converter);
 
             } else if (annotation instanceof Field) {
                 if (gotPayload) {
@@ -307,7 +339,6 @@ final class RequestFactory {
 
                 Field field = (Field) annotation;
                 String name = field.value();
-                boolean encoded = field.encoded();
 
                 Class<?> rawParameterType = Utils.getRawType(type);
                 gotQuery = true;
@@ -322,16 +353,16 @@ final class RequestFactory {
                     Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
                     Converter<?, String> converter =
                             retrofit.stringConverter(iterableType, annotations);
-                    return new ParameterHandler.Field<>(name, converter, encoded).iterable();
+                    return new ParameterHandler.Field<>(name, converter).iterable();
                 } else if (rawParameterType.isArray()) {
                     Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
                     Converter<?, String> converter =
                             retrofit.stringConverter(arrayComponentType, annotations);
-                    return new ParameterHandler.Field<>(name, converter, encoded).array();
+                    return new ParameterHandler.Field<>(name, converter).array();
                 } else {
                     Converter<?, String> converter =
                             retrofit.stringConverter(type, annotations);
-                    return new ParameterHandler.Field<>(name, converter, encoded);
+                    return new ParameterHandler.Field<>(name, converter);
                 }
 
             } else if (annotation instanceof Body) {
