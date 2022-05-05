@@ -51,6 +51,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import kotlin.coroutines.Continuation;
@@ -145,6 +146,41 @@ final class RequestFactory {
 
         return requestBuilder.get().build();
     }
+
+    org.sheedon.mqtt.Subscribe createSubscribe(Object[] args) throws IOException {
+        ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
+
+        int argumentCount = args.length;
+        if (argumentCount != handlers.length) {
+            throw new IllegalArgumentException(
+                    "Argument count ("
+                            + argumentCount
+                            + ") doesn't match expected count ("
+                            + handlers.length
+                            + ")");
+        }
+
+        RequestBuilder requestBuilder =
+                new RequestBuilder(topic, qos, retained,
+                        timeout, timeUnit, relativePayload,
+                        subscribeTopic, subscribeQos, attachRecord,
+                        subscriptionType, keyword, charset, autoEncode, isFormEncoded);
+
+        if (isKotlinSuspendFunction) {
+            // The Continuation is the last parameter and the handlers array contains null at that index.
+            throw new IllegalArgumentException(
+                    "Subscribe ("
+                            + Arrays.toString(args)
+                            + ") doesn't use suspend ");
+        }
+
+        for (int p = 0; p < argumentCount; p++) {
+            handlers[p].apply(requestBuilder, args[p]);
+        }
+
+        return requestBuilder.getSubscribe();
+    }
+
 
     static final class Builder {
 
