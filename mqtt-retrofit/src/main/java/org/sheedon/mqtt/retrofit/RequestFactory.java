@@ -73,7 +73,6 @@ final class RequestFactory {
     final boolean isKotlinSuspendFunction;
 
     private final String topic;
-    private final boolean isReplace;
     private final int qos;
     private final boolean retained;
 
@@ -83,7 +82,6 @@ final class RequestFactory {
     private final String relativePayload;
 
     private final String subscribeTopic;
-    private final boolean subscribeReplace;
     private final int subscribeQos;
     private final boolean attachRecord;
     private final SubscriptionType subscriptionType;
@@ -99,7 +97,6 @@ final class RequestFactory {
         isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
 
         topic = builder.topic;
-        isReplace = builder.isReplace;
         qos = builder.qos;
         retained = builder.retained;
 
@@ -109,7 +106,6 @@ final class RequestFactory {
         relativePayload = builder.relativePayload;
 
         subscribeTopic = builder.subscribeTopic;
-        subscribeReplace = builder.subscribeReplace;
         subscribeQos = builder.subscribeQos;
         attachRecord = builder.attachRecord;
         subscriptionType = builder.subscriptionType;
@@ -133,10 +129,10 @@ final class RequestFactory {
         }
 
         RequestBuilder requestBuilder =
-                new RequestBuilder(topic, isReplace, qos, retained,
+                new RequestBuilder(topic, qos, retained,
                         timeout, timeUnit, relativePayload,
-                        subscribeTopic, subscribeReplace, subscribeQos, attachRecord,
-                        subscriptionType, keyword, charset, autoEncode,isFormEncoded);
+                        subscribeTopic, subscribeQos, attachRecord,
+                        subscriptionType, keyword, charset, autoEncode, isFormEncoded);
 
         if (isKotlinSuspendFunction) {
             // The Continuation is the last parameter and the handlers array contains null at that index.
@@ -213,14 +209,18 @@ final class RequestFactory {
             }
 
             String baseTopic = retrofit.baseTopic;
-            if ((topic == null || topic.equals(""))
-                    && (baseTopic == null || baseTopic.isEmpty())) {
-                throw Utils.methodError(method, "Missing topic.");
-            } else if (topic == null || topic.equals("")) {
+            if (topic == null || topic.equals("")) {
                 topic = baseTopic;
             } else if (!isReplace) {
                 topic = baseTopic + topic;
             }
+
+            if (subscribeTopic == null || subscribeTopic.equals("")) {
+                subscribeTopic = baseTopic;
+            } else if (!subscribeReplace) {
+                subscribeTopic = baseTopic + subscribeTopic;
+            }
+
 
             return new RequestFactory(this);
         }
