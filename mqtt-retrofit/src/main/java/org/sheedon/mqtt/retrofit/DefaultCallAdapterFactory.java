@@ -194,16 +194,22 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             return delegate.request();
         }
 
+        @NonNull
         @Override
-        public void subscribe() {
-            delegate.subscribe();
+        public org.sheedon.mqtt.Subscribe subscribe() {
+            return delegate.subscribe();
         }
 
         @Override
-        public void subscribe(final Consumer<T> consumer) {
+        public void enqueue() {
+            delegate.enqueue();
+        }
+
+        @Override
+        public void enqueue(final Consumer<T> consumer) {
             Objects.requireNonNull(consumer, "consumer == null");
 
-            delegate.subscribe(new Consumer<T>() {
+            delegate.enqueue(new Consumer<T>() {
                 @Override
                 public void onResponse(@NonNull Observable<T> observable, @Nullable Response<T> response) {
                     callbackExecutor.execute(() -> {
@@ -224,9 +230,9 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         }
 
         @Override
-        public void subscribe(@NonNull Subscribe<T> subscribe) {
+        public void enqueue(@NonNull Subscribe<T> subscribe) {
             Objects.requireNonNull(subscribe, "subscribe == null");
-            delegate.subscribe(new Subscribe<T>() {
+            delegate.enqueue(new Subscribe<T>() {
                 @Override
                 public void onResponse(@NonNull Observable<T> observable, @Nullable MqttSubscribe response) {
                     callbackExecutor.execute(() -> {
@@ -247,10 +253,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         }
 
         @Override
-        public void subscribe(@NonNull FullConsumer<T> consumer) {
+        public void enqueue(@NonNull FullConsumer<T> consumer) {
             Objects.requireNonNull(consumer, "consumer == null");
 
-            delegate.subscribe(new FullConsumer<T>() {
+            delegate.enqueue(new FullConsumer<T>() {
                 @Override
                 public void onResponse(@NonNull Observable<T> observable, @Nullable Response<T> response) {
                     callbackExecutor.execute(() -> {
@@ -278,6 +284,37 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
                 @Override
                 public void onFailure(@NonNull Observable<T> observable, @Nullable Throwable t) {
                     callbackExecutor.execute(() -> consumer.onFailure(ExecutorCallbackObservable.this, t));
+                }
+            });
+        }
+
+        @Override
+        public void unsubscribe(@Nullable Subscribe<T> callback) {
+            delegate.enqueue(new Subscribe<T>() {
+
+                @Override
+                public void onResponse(@NonNull Observable<T> observable, @Nullable MqttSubscribe response) {
+                    if (callback == null) {
+                        return;
+                    }
+
+                    callbackExecutor.execute(() -> {
+                        if (delegate.isCanceled()) {
+                            // Emulate OkMqtt's behavior of throwing/delivering an IOException on cancellation.
+                            callback.onFailure(ExecutorCallbackObservable.this, new IOException("Canceled"));
+                        } else {
+                            callback.onResponse(ExecutorCallbackObservable.this, response);
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(@NonNull Observable<T> observable, @Nullable Throwable t) {
+                    if (callback == null) {
+                        return;
+                    }
+                    
+                    callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackObservable.this, t));
                 }
             });
         }
