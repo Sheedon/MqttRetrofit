@@ -29,7 +29,6 @@
  */
 package org.sheedon.mqtt.retrofit;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,24 +69,6 @@ final class FormBody {
         return builder.toString();
     }
 
-    private void integrationData() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{");
-
-        int size = encodedNames.size();
-        for (int index = 0; index < size; index++) {
-            String name = encodedNames.get(index);
-            String values = encodedValues.get(index);
-            builder.append(convert(name, values));
-            builder.append(",");
-        }
-
-        if (builder.length() > 1) {
-            builder.deleteCharAt(builder.length() - 1);
-        }
-        builder.append("}");
-    }
-
     private String convert(String name, String values) {
         return "\"" + name + "\":\"" + values + "\"";
     }
@@ -96,15 +77,8 @@ final class FormBody {
     public static final class Builder {
         private final List<String> names = new ArrayList<>();
         private final List<String> values = new ArrayList<>();
-        private final Charset charset;
 
-        Builder() {
-            this(null);
-        }
-
-        Builder(Charset charset) {
-            this.charset = charset;
-        }
+        Builder() {}
 
         Builder add(String name, String value) {
             if (name == null) throw new NullPointerException("name == null");
@@ -118,10 +92,6 @@ final class FormBody {
 
         public String build() {
             return new FormBody(names, values).convertToString();
-        }
-
-        Builder addEncoded(String name, String value) {
-            return add(name, value);
         }
     }
 }
