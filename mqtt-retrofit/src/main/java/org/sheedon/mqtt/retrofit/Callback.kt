@@ -21,25 +21,21 @@ interface Callback<T> {
     fun onFailure(call: Call<T>, t: Throwable?)
 }
 
-interface Consumer<T> {
+interface Consumer<T> :IFailureConsumer<T>{
     /**
      * Invoked for a received MQTT response.
      */
     fun onResponse(observable: Observable<T>, response: Response<T>?)
-
-    /**
-     * Invoked when a network exception occurred talking to the server or when an unexpected
-     * exception occurred creating the request or processing the response.
-     */
-    fun onFailure(observable: Observable<T>, t: Throwable?)
 }
 
-interface Subscribe<T> {
+interface Subscribe<T> :IFailureConsumer<T>{
     /**
      * Invoked for a received MQTT response.
      */
     fun onResponse(observable: Observable<T>, response: MqttSubscribe?)
+}
 
+interface IFailureConsumer<T> {
     /**
      * Invoked when a network exception occurred talking to the server or when an unexpected
      * exception occurred creating the request or processing the response.
@@ -48,4 +44,6 @@ interface Subscribe<T> {
 }
 
 interface FullConsumer<T> : Consumer<T>, Subscribe<T>
+
+
 
