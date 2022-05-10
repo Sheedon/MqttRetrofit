@@ -93,7 +93,7 @@ final class OkMqttCall<T> implements Call<T> {
      * or has thrown in previous attempts to create it.
      */
     @GuardedBy("this")
-    private org.sheedon.mqtt.Call getRawCall() throws IOException{
+    private org.sheedon.mqtt.Call getRawCall() throws IOException {
         org.sheedon.mqtt.Call call = rawCall;
         if (call != null) return call;
 
@@ -121,8 +121,7 @@ final class OkMqttCall<T> implements Call<T> {
     }
 
     @Override
-    public void enqueue(final Callback.Call<T> callback) {
-
+    public void enqueue(@Nullable Callback<T> callback) {
         org.sheedon.mqtt.Call call;
         Throwable failure;
 
@@ -148,29 +147,27 @@ final class OkMqttCall<T> implements Call<T> {
 
         if (canceled) {
             call.cancel();
+            return;
         }
 
-        if (callback == null)
+        if (callback == null) {
             call.publish();
-        else
+        } else {
             call.enqueue(new org.sheedon.mqtt.Callback() {
                 @Override
-                public void onResponse(@NonNull Request request,
-                                       @NonNull org.sheedon.mqtt.Response rawResponse) {
+                public void onResponse(@NonNull org.sheedon.mqtt.Call call, @NonNull org.sheedon.mqtt.Response rawResponse) {
                     Response<T> response;
                     try {
                         response = parseResponse(rawResponse);
+                        callSuccess(response);
                     } catch (Throwable e) {
                         throwIfFatal(e);
                         callFailure(e);
-                        return;
                     }
-
-                    callSuccess(response);
                 }
 
                 @Override
-                public void onFailure(Throwable e) {
+                public void onFailure(@Nullable Throwable e) {
                     dealWithCallback(callback, OkMqttCall.this, null, e, false);
                 }
 
@@ -182,6 +179,7 @@ final class OkMqttCall<T> implements Call<T> {
                     dealWithCallback(callback, OkMqttCall.this, response, null, true);
                 }
             });
+        }
     }
 
     /**
@@ -193,7 +191,7 @@ final class OkMqttCall<T> implements Call<T> {
      * @param t         错误
      * @param isSuccess 是否成功
      */
-    private void dealWithCallback(Callback.Call<T> callback, Call<T> call, Response<T> response, Throwable t, boolean isSuccess) {
+    private void dealWithCallback(Callback<T> callback, Call<T> call, Response<T> response, Throwable t, boolean isSuccess) {
 
         if (callback == null)
             return;
@@ -220,7 +218,7 @@ final class OkMqttCall<T> implements Call<T> {
     }
 
     private Response<T> parseResponse(org.sheedon.mqtt.Response rawResponse) throws IOException {
-        ResponseBody rawBody = rawResponse.body();
+        ResponseBody rawBody = rawResponse.getBody();
 
         try {
             T body = responseConverter.convert(rawBody);
