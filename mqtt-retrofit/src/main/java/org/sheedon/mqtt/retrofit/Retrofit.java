@@ -31,6 +31,8 @@ package org.sheedon.mqtt.retrofit;
 
 import androidx.annotation.Nullable;
 
+import org.sheedon.mqtt.CallFactory;
+import org.sheedon.mqtt.ObservableFactory;
 import org.sheedon.mqtt.OkMqttClient;
 import org.sheedon.mqtt.RequestBody;
 import org.sheedon.mqtt.ResponseBody;
@@ -74,8 +76,8 @@ import static java.util.Collections.unmodifiableList;
 public class Retrofit {
     private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-    final org.sheedon.mqtt.CallFactory callFactory;
-    final org.sheedon.mqtt.ObservableFactory observableFactory;
+    final CallFactory callFactory;
+    final ObservableFactory observableFactory;
     final String baseTopic;
     final List<Converter.Factory> converterFactories;
     final int defaultConverterFactoriesSize;
@@ -86,8 +88,8 @@ public class Retrofit {
     final boolean validateEagerly;
     final int timeout;
 
-    Retrofit(org.sheedon.mqtt.CallFactory callFactory,
-             org.sheedon.mqtt.ObservableFactory observableFactory,
+    Retrofit(CallFactory callFactory,
+             ObservableFactory observableFactory,
              String baseTopic,
              List<Converter.Factory> converterFactories,
              int defaultConverterFactoriesSize,
@@ -169,7 +171,7 @@ public class Retrofit {
      * The factory used to create {@linkplain org.sheedon.mqtt.Call OkMqtt calls} for sending a MQTT requests.
      * Typically an instance of {@link OkMqttClient}.
      */
-    public org.sheedon.mqtt.CallFactory callFactory() {
+    public CallFactory callFactory() {
         return callFactory;
     }
 
@@ -177,7 +179,7 @@ public class Retrofit {
      * The factory used to create {@linkplain org.sheedon.mqtt.Observable OkMqtt observables} for sending a MQTT requests.
      * Typically an instance of {@link OkMqttClient}.
      */
-    public org.sheedon.mqtt.ObservableFactory observableFactory() {
+    public ObservableFactory observableFactory() {
         return observableFactory;
     }
 
@@ -388,15 +390,12 @@ public class Retrofit {
     }
 
     public static final class Builder {
-        private @Nullable
-        org.sheedon.mqtt.CallFactory callFactory;
-        private @Nullable
-        org.sheedon.mqtt.ObservableFactory observableFactory;
+        private @Nullable CallFactory callFactory;
+        private @Nullable ObservableFactory observableFactory;
         private String baseTopic;
         private final List<Converter.Factory> converterFactories = new ArrayList<>();
         private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
-        private @Nullable
-        Executor callbackExecutor;
+        private @Nullable Executor callbackExecutor;
         private boolean validateEagerly;
         private int timeout;
 
@@ -447,7 +446,7 @@ public class Retrofit {
          * <p>
          * Note: Calling {@link #client} automatically sets this value.
          */
-        public Builder callFactory(org.sheedon.mqtt.CallFactory factory) {
+        public Builder callFactory(CallFactory factory) {
             this.callFactory = Objects.requireNonNull(factory, "CallFactory == null");
             return this;
         }
@@ -457,7 +456,7 @@ public class Retrofit {
          * <p>
          * Note: Calling {@link #client} automatically sets this value.
          */
-        public Builder observableFactory(org.sheedon.mqtt.ObservableFactory factory) {
+        public Builder observableFactory(ObservableFactory factory) {
             this.observableFactory = Objects.requireNonNull(factory, "ObservableFactory == null");
             return this;
         }
