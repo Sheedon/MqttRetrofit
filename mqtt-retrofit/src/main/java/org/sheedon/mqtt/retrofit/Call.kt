@@ -47,11 +47,15 @@ interface Observable<T> {
      * Returns the original request that initiated this call.
      */
     fun request(): Request
+    fun subscribe(): org.sheedon.mqtt.Subscribe
 
-    fun subscribe()
-    fun subscribe(consumer: Consumer<T>)
-    fun subscribe(consumer: Subscribe<T>)
-    fun subscribe(consumer: FullConsumer<T>)
+    fun enqueue()
+    fun enqueue(consumer: Consumer<T>)
+    fun enqueue(consumer: Subscribe<T>)
+    fun enqueue(consumer: FullConsumer<T>)
+
+
+    fun unsubscribe(callback: Subscribe<T>?)
 
     /**
      * Cancels the request, if possible. Requests that are already complete cannot be canceled.
