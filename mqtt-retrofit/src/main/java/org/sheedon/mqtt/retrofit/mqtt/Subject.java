@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * To dynamically configure the Topic of the mqtt request according to the Theme
- * Call<> getManagerList(@Theme() String topic, @Body UserSubmitModel body);
+ * Call<> getManagerList(@Subject() String topic, @Body UserSubmitModel body);
  * <p>
  * Theme replace TOPIC
  *

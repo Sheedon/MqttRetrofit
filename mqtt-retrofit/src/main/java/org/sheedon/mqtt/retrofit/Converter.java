@@ -39,26 +39,33 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * Convert objects to and from their representation in MQTT. Instances are created by {@linkplain
- * Factory a factory} which is {@linkplain Retrofit.Builder#addConverterFactory(Factory) installed}
- * into the {@link Retrofit} instance.
+ * 将对象与其在 MQTT 中的表示形式相互转换。
+ * 实例由 {@linkplain Factory a factory} 创建，{@linkplain Retrofit.BuilderaddConverterFactory(Factory)
+ * installed} 到 {@link Retrofit} 实例中。
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 10:00
  */
 public interface Converter<F, T> {
+    /**
+     * 将【类型为F的数据】转化为【类型为T的结果】
+     *
+     * @param value 需要转化的对象
+     * @return 转化后的结果
+     * @throws IOException
+     */
     T convert(F value) throws IOException;
 
     /**
-     * Creates {@link Converter} instances based on a type and target usage.
+     * 根据类型和目标使用情况创建 {@link Converter} 实例。
      */
     abstract class Factory {
         /**
-         * Returns a {@link Converter} for converting an MQTT response body to {@code type}, or null if
-         * {@code type} cannot be handled by this factory. This is used to create converters for
-         * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
-         * declaration.
+         * 这用于从 {@code Call<SimpleResponse>} 声明创建响应类型的转换器，返回用于将 MQTT 响应正文转换为
+         * {@code type} 的 {@link Converter}。
+         *
+         * 如果此工厂无法处理 {@code type}，则返回 null。
          */
         public @Nullable
         Converter<ResponseBody, ?> responseBodyConverter(Type type,
@@ -66,14 +73,25 @@ public interface Converter<F, T> {
             return null;
         }
 
-
+        /**
+         * 返回用于将 {@code type} 转换为 MQTT 请求正文的 {@link Converter}，
+         * 如果此工厂无法处理 {@code type}，则返回 null。
+         *
+         * 这用于为 {@link Body @Body} 值指定的类型创建转换器。
+         */
         public @Nullable
         Converter<?, String> requestBodyConverter(Type type,
-                                                       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+                                                  Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
             return null;
         }
 
 
+        /**
+         * 返回用于将 {@code type} 转换为 {@link String} 的 {@link Converter}，
+         * 如果此工厂无法处理 {@code type}，则返回 null。
+         *
+         * 这用于为 {@link Field @Field}、{@link Path @Path} 指定的类型创建转换器。
+         */
         public @Nullable
         Converter<?, String> stringConverter(Type type, Annotation[] annotations,
                                              Retrofit retrofit) {
@@ -81,16 +99,16 @@ public interface Converter<F, T> {
         }
 
         /**
-         * Extract the upper bound of the generic parameter at {@code index} from {@code type}. For
-         * example, index 1 of {@code Map<String, ? extends Runnable>} returns {@code Runnable}.
+         * 从 {@code type} 中提取 {@code index} 的泛型参数的上限。
+         * 例如，{@code Map<String, ? extends Runnable>} 返回 {@code Runnable}。
          */
         protected static Type getParameterUpperBound(int index, ParameterizedType type) {
             return Utils.getParameterUpperBound(index, type);
         }
 
         /**
-         * Extract the raw class type from {@code type}. For example, the type representing {@code
-         * List<? extends Runnable>} returns {@code List.class}.
+         * 从 {@code type} 中提取原始类类型。
+         * 例如，表示 {@code List<? extends Runnable>} 返回 {@code List.class}。
          */
         protected static Class<?> getRawType(Type type) {
             return Utils.getRawType(type);
