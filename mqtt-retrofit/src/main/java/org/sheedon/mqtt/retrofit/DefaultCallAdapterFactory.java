@@ -43,7 +43,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * 默认Call/Observable适配器工厂
+ * 默认Call/Observable适配器工厂，根据服务接口方法的返回类型创建CallAdapter实例
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -57,6 +57,13 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         this.callbackExecutor = callbackExecutor;
     }
 
+    /**
+     * 根据配置的返回值类型，创建对应的CallAdapter
+     *
+     * @param returnType  返回值类型
+     * @param annotations 方法的注解
+     * @param retrofit    Retrofit
+     */
     @Override
     public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         final Class<?> rawType = getRawType(returnType);
@@ -100,7 +107,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         };
     }
 
-
+    /**
+     * 默认的Call的反馈调度实现类。
+     * 代理执行okMqtt-Request publish/enqueue
+     */
     static final class ExecutorCallbackCall<T> implements Call<T> {
         final Executor callbackExecutor;
         final Call<T> delegate;
@@ -110,31 +120,50 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             this.delegate = delegate;
         }
 
+        /**
+         * 如果此调用已被 {@linkplain publish() published} 或 {@linkplain enqueue(Callback) enqueued}，
+         * 则返回 true。多次发布或排队调用是错误的。
+         */
         @Override
         public boolean isExecuted() {
             return delegate.isExecuted();
         }
 
+        /**
+         * 取消此通话。将尝试取消进行中的呼叫，如果呼叫尚未执行，则永远不会执行。
+         */
         @Override
         public void cancel() {
             delegate.cancel();
         }
 
+        /**
+         * 如果调用了 {@link cancel()}，则为真。
+         */
         @Override
         public boolean isCanceled() {
             return delegate.isCanceled();
         }
 
+        /**
+         * 返回发起此调用的原始请求。
+         */
         @Override
         public Request request() {
             return delegate.request();
         }
 
+        /**
+         * 异步发送请求，无论请求是否发送成功。
+         */
         @Override
         public void publish() {
             enqueue(null);
         }
 
+        /**
+         * 异步发送请求并通知 {@code callback} 其响应，或者如果与服务器交谈、创建请求或处理响应发生错误。
+         */
         @Override
         public void enqueue(final Callback<T> callback) {
             if (callback == null) {
@@ -164,6 +193,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
         }
     }
 
+    /**
+     * 默认的Observable的反馈调度实现类。
+     * 代理执行okMqtt-Request/Subscribe 执行任务入队操作
+     */
     static final class ExecutorCallbackObservable<T> implements Observable<T> {
         final Executor callbackExecutor;
         final Observable<T> delegate;
@@ -173,38 +206,60 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             this.delegate = delegate;
         }
 
+        /**
+         * 如果此调用已被 {@linkplain publish() published} 或 {@linkplain enqueue(Callback) enqueued}，
+         * 则返回 true。多次发布或排队调用是错误的。
+         */
         @Override
         public boolean isExecuted() {
             return delegate.isExecuted();
         }
 
+        /**
+         * 取消此通话。将尝试取消进行中的呼叫，如果呼叫尚未执行，则永远不会执行。
+         */
         @Override
         public void cancel() {
             delegate.cancel();
         }
 
+        /**
+         * 如果调用了 {@link cancel()}，则为真。
+         */
         @Override
         public boolean isCanceled() {
             return delegate.isCanceled();
         }
 
-
+        /**
+         * 返回发起此调用的原始请求。
+         */
         @Override
         public Request request() {
             return delegate.request();
         }
 
+        /**
+         * 返回发起此调用的原始订阅。
+         */
         @NonNull
         @Override
         public org.sheedon.mqtt.Subscribe subscribe() {
             return delegate.subscribe();
         }
 
+        /**
+         * 异步发送订阅，无论订阅是否发送成功。
+         */
         @Override
         public void enqueue() {
             delegate.enqueue();
         }
 
+        /**
+         * 异步发送订阅并通知 {@code consumer} 其响应，如果发布和订阅 mqtt-server，创建订阅者请求或处理响应产生
+         * 错误时回调错误响应方法。
+         */
         @Override
         public void enqueue(final Consumer<T> consumer) {
             Objects.requireNonNull(consumer, "consumer == null");
@@ -229,6 +284,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             });
         }
 
+        /**
+         * 异步发送订阅并通知 {@code Subscribe} 其响应，或者如果发生错误订阅 mqtt-server、创建订阅者请求或处理响应
+         * 产生错误时回调错误响应方法。
+         */
         @Override
         public void enqueue(@NonNull Subscribe<T> subscribe) {
             Objects.requireNonNull(subscribe, "subscribe == null");
@@ -252,6 +311,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             });
         }
 
+        /**
+         * 异步发送订阅并通知 {@code consumer} 其响应，如果订阅 mqtt-server 或 loacl-server有误，则将错误消息
+         * 返回到{@link #onFailure}中。
+         */
         @Override
         public void enqueue(@NonNull FullConsumer<T> consumer) {
             Objects.requireNonNull(consumer, "consumer == null");
@@ -288,10 +351,13 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             });
         }
 
+        /**
+         * 异步发送取消订阅并通知 {@code callback} 其响应，如果取消订阅 mqtt-server 或 loacl-server有误，则将错误消息
+         *          * 返回到{@link #onFailure}中。
+         */
         @Override
-        public void unsubscribe(@Nullable Subscribe<T> callback) {
-            delegate.enqueue(new Subscribe<T>() {
-
+        public void unsubscribe(Subscribe<T> callback) {
+            delegate.unsubscribe(callback == null ? null : new Subscribe<T>() {
                 @Override
                 public void onResponse(@NonNull Observable<T> observable, @Nullable MqttSubscribe response) {
                     if (callback == null) {
@@ -313,7 +379,7 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
                     if (callback == null) {
                         return;
                     }
-                    
+
                     callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackObservable.this, t));
                 }
             });
