@@ -34,6 +34,7 @@ import java.util.List;
 
 /**
  * 参数内容主体
+ * 基础参数，格式：name=value&name1=value1
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
