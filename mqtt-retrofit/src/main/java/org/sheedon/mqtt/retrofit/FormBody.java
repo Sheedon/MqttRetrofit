@@ -51,43 +51,37 @@ final class FormBody {
 
     private String convertToString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{");
 
         int size = encodedNames.size();
         for (int index = 0; index < size; index++) {
             String name = encodedNames.get(index);
             String values = encodedValues.get(index);
             builder.append(convert(name, values));
-            builder.append(",");
+            builder.append("&");
         }
 
         if (builder.length() > 1) {
             builder.deleteCharAt(builder.length() - 1);
         }
-        builder.append("}");
 
         return builder.toString();
     }
 
     private String convert(String name, String values) {
-        return "\"" + name + "\":\"" + values + "\"";
+        return name + "=" + values;
     }
 
 
-    public static final class Builder {
+    public static final class Builder implements FormBodyConverter {
         private final List<String> names = new ArrayList<>();
         private final List<String> values = new ArrayList<>();
 
-        Builder() {}
-
-        Builder add(String name, String value) {
+        public void add(String name, String value) {
             if (name == null) throw new NullPointerException("name == null");
             if (value == null) throw new NullPointerException("value == null");
 
             names.add(name);
             values.add(value);
-
-            return this;
         }
 
         public String build() {

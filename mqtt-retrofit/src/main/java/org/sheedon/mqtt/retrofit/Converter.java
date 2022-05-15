@@ -64,7 +64,7 @@ public interface Converter<F, T> {
         /**
          * 这用于从 {@code Call<SimpleResponse>} 声明创建响应类型的转换器，返回用于将 MQTT 响应正文转换为
          * {@code type} 的 {@link Converter}。
-         *
+         * <p>
          * 如果此工厂无法处理 {@code type}，则返回 null。
          */
         public @Nullable
@@ -76,7 +76,7 @@ public interface Converter<F, T> {
         /**
          * 返回用于将 {@code type} 转换为 MQTT 请求正文的 {@link Converter}，
          * 如果此工厂无法处理 {@code type}，则返回 null。
-         *
+         * <p>
          * 这用于为 {@link Body @Body} 值指定的类型创建转换器。
          */
         public @Nullable
@@ -89,13 +89,21 @@ public interface Converter<F, T> {
         /**
          * 返回用于将 {@code type} 转换为 {@link String} 的 {@link Converter}，
          * 如果此工厂无法处理 {@code type}，则返回 null。
-         *
+         * <p>
          * 这用于为 {@link Field @Field}、{@link Path @Path} 指定的类型创建转换器。
          */
         public @Nullable
         Converter<?, String> stringConverter(Type type, Annotation[] annotations,
                                              Retrofit retrofit) {
             return null;
+        }
+
+        /**
+         * 表单数据转化者，用于使用 {@link @Field}是配置表单数据
+         */
+        public @Nullable
+        FormBodyConverter formBodyConverter() {
+            return new FormBody.Builder();
         }
 
         /**
