@@ -49,6 +49,7 @@ import java.util.Objects;
 abstract class ParameterHandler<T> {
     abstract void apply(RequestBuilder builder, @Nullable T value) throws IOException;
 
+    // list执行
     final ParameterHandler<Iterable<T>> iterable() {
         return new ParameterHandler<Iterable<T>>() {
             @Override
@@ -63,6 +64,7 @@ abstract class ParameterHandler<T> {
         };
     }
 
+    // 数组执行
     final ParameterHandler<Object> array() {
         return new ParameterHandler<Object>() {
             @Override
@@ -77,7 +79,7 @@ abstract class ParameterHandler<T> {
     }
 
     /**
-     * 通过{@link org.sheedon.mqtt.retrofit.mqtt.Subject}注解 添加的主题
+     * 通过{@link org.sheedon.mqtt.retrofit.mqtt.Subject}注解，添加的主题
      */
     static final class RelativeTopic extends ParameterHandler<String> {
         @Override
@@ -131,6 +133,7 @@ abstract class ParameterHandler<T> {
 
     /**
      * 请求数据配置的参数
+     * {@link org.sheedon.mqtt.retrofit.mqtt.Field} 构建配置参数
      *
      * @param <T> 类型
      */
@@ -159,6 +162,8 @@ abstract class ParameterHandler<T> {
      * 1. okmqtt订阅对象 Subscribe
      * 2. okmqtt请求body RequestBody
      * 3. 常规请求对象
+     * <p>
+     * 通过{@link org.sheedon.mqtt.retrofit.mqtt.Body} 配置请求消息
      *
      * @param <T> 类型
      */
@@ -175,12 +180,12 @@ abstract class ParameterHandler<T> {
                 throw new IllegalArgumentException("Body parameter value must not be null.");
             }
 
-            if(value instanceof Subscribe){
+            if (value instanceof Subscribe) {
                 builder.setSubscribeBody((Subscribe) value);
                 return;
             }
 
-            if(value instanceof RequestBody){
+            if (value instanceof RequestBody) {
                 builder.setRequestBody((RequestBody) value);
                 return;
             }

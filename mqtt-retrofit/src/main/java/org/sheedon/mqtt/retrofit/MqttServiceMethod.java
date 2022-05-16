@@ -27,7 +27,7 @@ import java.lang.reflect.Type;
 import kotlin.coroutines.Continuation;
 
 /**
- * Adapts an invocation of an interface method into an Mqtt call or Observable.
+ * 将接口方法的调用适配为 Mqtt Call 或 Mqtt Observable。
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -36,9 +36,8 @@ import kotlin.coroutines.Continuation;
 abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT> {
 
     /**
-     * Inspects the annotations on an interface method to construct a reusable service method that
-     * speaks MQTT. This requires potentially-expensive reflection so it is best to build each service
-     * method only once and reuse it.
+     * 检查接口方法上的注释以构造一个可重用的服务方法，该方法使用 MQTT。
+     * 这需要潜在的昂贵反射，因此最好只构建每个服务方法一次并重用它。
      */
     static <ResponseT, ReturnT> MqttServiceMethod<ResponseT, ReturnT> parseAnnotations(
             Retrofit retrofit, Method method, RequestFactory requestFactory) {
@@ -117,6 +116,17 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         }
     }
 
+    /**
+     * 通过retrofit，根据「returnType」和「annotations」创建CallAdapter
+     *
+     * @param retrofit    Retrofit
+     * @param method      方法类，用于打印错误
+     * @param returnType  返回类型
+     * @param annotations 方法注解
+     * @param <ResponseT> 响应类型
+     * @param <ReturnT>   反馈类型
+     * @return CallAdapter
+     */
     private static <ResponseT, ReturnT> CallAdapter<ResponseT, ReturnT> createCallAdapter(
             Retrofit retrofit, Method method, Type returnType, Annotation[] annotations) {
         try {
@@ -127,6 +137,15 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         }
     }
 
+    /**
+     * 创建响应转化器
+     *
+     * @param retrofit     Retrofit
+     * @param method       方法，用于获取注解
+     * @param responseType 响应类型
+     * @param <ResponseT>  响应类型
+     * @return Converter<ResponseBody, ResponseT>
+     */
     private static <ResponseT> Converter<ResponseBody, ResponseT> createResponseConverter(
             Retrofit retrofit, Method method, Type responseType) {
         Annotation[] annotations = method.getAnnotations();
@@ -143,6 +162,14 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     private final Converter<ResponseBody, ResponseT> responseConverter;
     private final boolean isObservable;
 
+    /**
+     * 根据{@link RequestFactory}、{@link org.sheedon.mqtt.CallFactory}、
+     * {@link Converter<ResponseBody, ResponseT>} 构建mqtt服务方法类
+     *
+     * @param requestFactory    创建请求body的工厂
+     * @param callFactory       Call构建工厂
+     * @param responseConverter 响应转化器
+     */
     MqttServiceMethod(
             RequestFactory requestFactory,
             org.sheedon.mqtt.CallFactory callFactory,
@@ -154,6 +181,14 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         this.isObservable = false;
     }
 
+    /**
+     * 根据{@link RequestFactory}、{@link org.sheedon.mqtt.ObservableFactory}、
+     * {@link Converter<ResponseBody, ResponseT>} 构建mqtt服务方法类
+     *
+     * @param requestFactory    创建请求body的工厂
+     * @param observableFactory Observable构建工厂
+     * @param responseConverter 响应转化器
+     */
     MqttServiceMethod(
             RequestFactory requestFactory,
             org.sheedon.mqtt.ObservableFactory observableFactory,
@@ -165,6 +200,11 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         this.isObservable = true;
     }
 
+    /**
+     * 若{@link isObservable} 为true，则构建{@link OkMqttObservable}，反之构建{@link OkMqttCall}
+     *
+     * @param args 参数
+     */
     @Override
     final @Nullable
     ReturnT invoke(Object[] args) {
@@ -176,14 +216,30 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         return adapt(call, args);
     }
 
-    protected @Nullable ReturnT adapt(Call<ResponseT> call, Object[] args) {
+    /**
+     * 通过Call/args 调度方法
+     *
+     * @param call Call<ResponseT>
+     * @param args Object[]
+     * @return ReturnT
+     */
+    protected @Nullable
+    ReturnT adapt(Call<ResponseT> call, Object[] args) {
         throw new RuntimeException("Please implement the method of adapt Call");
     }
 
+    /**
+     * Observable/args 调度方法
+     *
+     * @param call Observable<ResponseT>
+     * @param args Object[]
+     * @return ReturnT
+     */
     protected ReturnT adapt(Observable<ResponseT> call, Object[] args) {
         throw new RuntimeException("Please implement the method of adapt Observable");
     }
 
+    // call调度的mqtt服务方法
     static final class CallAdapted<ResponseT, ReturnT> extends MqttServiceMethod<ResponseT, ReturnT> {
         private final CallAdapter<ResponseT, ReturnT> callAdapter;
 
@@ -202,6 +258,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         }
     }
 
+    // Observable调度的mqtt服务方法
     static final class ObservableAdapted<ResponseT, ReturnT> extends MqttServiceMethod<ResponseT, ReturnT> {
 
         private final CallAdapter<ResponseT, ReturnT> callAdapter;
@@ -221,6 +278,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         }
     }
 
+    // 通过协程响应结果的mqtt服务方法
     static final class SuspendForResponse<ResponseT> extends MqttServiceMethod<ResponseT, Object> {
         private final CallAdapter<ResponseT, Call<ResponseT>> callAdapter;
 
@@ -250,6 +308,7 @@ abstract class MqttServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         }
     }
 
+    // 通过协程处理body的mqtt服务方法
     static final class SuspendForBody<ResponseT> extends MqttServiceMethod<ResponseT, Object> {
         private final CallAdapter<ResponseT, Call<ResponseT>> callAdapter;
         private final boolean isNullable;
