@@ -73,7 +73,7 @@ public class RequestBuilder {
     private final Request.Builder requestBuilder;
     private final Subscribe.Builder subscribeBuilder;
     private @Nullable
-    FormBody.Builder formBuilder;
+    final FormBodyConverter formBuilder;
     private String body = null;
 
     private Subscribe subscribeBody;
@@ -85,7 +85,7 @@ public class RequestBuilder {
                           String subscribeTopic, int subscribeQos,
                           boolean attachRecord, SubscriptionType subscriptionType,
                           String keyword,
-                          String charset, boolean autoEncode, boolean isFormEncoded) {
+                          String charset, boolean autoEncode, FormBodyConverter formBuilder) {
         this.topic = topic;
         this.qos = qos < 0 || qos > 2 ? 0 : qos;
         this.retained = retained;
@@ -105,11 +105,10 @@ public class RequestBuilder {
         this.charset = charset;
         this.autoEncode = autoEncode;
 
+        this.formBuilder = formBuilder;
+
         this.requestBuilder = new Request.Builder();
         this.subscribeBuilder = new Subscribe.Builder();
-        if (isFormEncoded) {
-            this.formBuilder = new FormBody.Builder();
-        }
     }
 
 
@@ -125,7 +124,7 @@ public class RequestBuilder {
 
     /**
      * 往 {@link org.sheedon.mqtt.retrofit.mqtt.TOPIC} 根据 {@link org.sheedon.mqtt.retrofit.mqtt.Path}
-     * 替换关键字段
+     * 替换请求关键字段
      *
      * @param name  字段名
      * @param value 字段值
@@ -138,6 +137,14 @@ public class RequestBuilder {
         topic = topic.replace("{" + name + "}", value);
     }
 
+    /**
+     * 往 {@link org.sheedon.mqtt.retrofit.mqtt.SUBSCRIBE} 根据
+     * {@link org.sheedon.mqtt.retrofit.mqtt.Path}
+     * 替换订阅关键字段
+     *
+     * @param name  字段名
+     * @param value 字段值
+     */
     void addSubscribeTopicPathParam(String name, String value) {
         if (subscribeTopic == null) {
             subscribeTopic = "";
@@ -145,6 +152,14 @@ public class RequestBuilder {
         subscribeTopic = subscribeTopic.replace("{" + name + "}", value);
     }
 
+    /**
+     * 往 {@link org.sheedon.mqtt.retrofit.mqtt.PAYLOAD} 根据
+     * {@link org.sheedon.mqtt.retrofit.mqtt.Path}
+     * 替换有效载荷关键字段
+     *
+     * @param name  字段名
+     * @param value 字段值
+     */
     void addPathParam(String name, String value) {
         if (relativePayload == null) {
             // The relative URL is cleared when the first query parameter is set.
@@ -153,6 +168,14 @@ public class RequestBuilder {
         relativePayload = relativePayload.replace("{" + name + "}", value);
     }
 
+    /**
+     * 往 {@link org.sheedon.mqtt.retrofit.mqtt.KEYWORD} 根据
+     * {@link org.sheedon.mqtt.retrofit.mqtt.Path}
+     * 替换关键字的关键字段
+     *
+     * @param name  字段名
+     * @param value 字段值
+     */
     void addKeywordPathParam(String name, String value) {
         if (relativePayload == null) {
             // The relative URL is cleared when the first query parameter is set.
@@ -161,6 +184,12 @@ public class RequestBuilder {
         relativePayload = relativePayload.replace("{" + name + "}", value);
     }
 
+    /**
+     * 配置{@link org.sheedon.mqtt.retrofit.mqtt.Field}配置表单数据
+     *
+     * @param name  字段名
+     * @param value 字段值
+     */
     void addFormField(String name, String value) {
         if (formBuilder == null)
             return;
@@ -168,18 +197,39 @@ public class RequestBuilder {
         formBuilder.add(name, value);
     }
 
+    /**
+     * 配置{@link org.sheedon.mqtt.retrofit.mqtt.Body}配置订阅配置
+     *
+     * @param value 订阅内容
+     */
     void setSubscribeBody(Subscribe value) {
         subscribeBody = value;
     }
 
+    /**
+     * 配置{@link org.sheedon.mqtt.retrofit.mqtt.Body}配置「请求/订阅」配置
+     *
+     * @param value 请求/订阅内容
+     */
     void setRequestBody(RequestBody value) {
         requestBody = value;
     }
 
+    /**
+     * 设置body消息
+     *
+     * @param body 有效载合数据
+     */
     void setBody(String body) {
         this.body = body;
     }
 
+    /**
+     * 构建得到Request.Builder，核实订阅主题，请求主题或关键字不能都为空
+     * 依次填充 {@link topic}、{@link subscribeTopic}、{@link keyword}、{@link requestBody}
+     *
+     * @return 请求构建者
+     */
     Request.Builder get() {
         String topic = this.topic;
         if (topic == null && subscribeTopic == null && keyword == null) {
@@ -224,6 +274,11 @@ public class RequestBuilder {
 
     }
 
+    /**
+     * 构建得到Subscribe，核实订阅主题或关键字不能都为空
+     *
+     * @return Subscribe
+     */
     Subscribe getSubscribe() {
         if (subscribeBody != null) {
             return subscribeBody;
@@ -243,7 +298,9 @@ public class RequestBuilder {
     }
 
     /**
-     * 获取请求数据
+     * 获取请求数据，若body不为空，则取body，
+     * 反之核实formBuilder，若formBuilder不为空则根据formBuilder创建
+     * 否则根据{@link org.sheedon.mqtt.retrofit.mqtt.PAYLOAD} 创建配置创建
      */
     private String getRequestBody() {
         String body = this.body;
