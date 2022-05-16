@@ -37,7 +37,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 /**
- * 接口服务方法
+ * 抽象服务方法类，定义抽象调用方法，将「请求/订阅」构建成「Call/Observable」
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
