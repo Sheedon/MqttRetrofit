@@ -41,7 +41,10 @@ import java.io.IOException;
 import static org.sheedon.mqtt.retrofit.Utils.throwIfFatal;
 
 /**
- * okmqtt调度
+ * Call在OkMqtt中的实现类，用于代理创建请求调度。
+ * <p>
+ * 通过{@link callFactory} 将请求数据存储工厂{@link requestFactory}配置对应请求参数{@link args}，以获取真实Call，
+ * 对于Call代理执行无响应请求{@link #publish()}或者「订阅响应的请求」{@link #enqueue(Callback)}。
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -89,8 +92,7 @@ final class OkMqttCall<T> implements Call<T> {
     }
 
     /**
-     * Returns the raw call, initializing it if necessary. Throws if initializing the raw call throws,
-     * or has thrown in previous attempts to create it.
+     * 返回原始调用，必要时对其进行初始化。如果初始化原始调用抛出，或者在之前创建它的尝试中已经抛出，则抛出。
      */
     @GuardedBy("this")
     private org.sheedon.mqtt.Call getRawCall() throws IOException {
@@ -115,11 +117,23 @@ final class OkMqttCall<T> implements Call<T> {
         }
     }
 
+    /**
+     * 发送请求，表示该请求不需要监听反馈
+     */
     @Override
     public void publish() {
         enqueue(null);
     }
 
+    /**
+     * 将请求消息入队，若监听{@link callback} 不为空，则借助callback反馈响应结果。
+     * 根据mqtt-server的响应反馈结果，或者网络连接、mqtt断开连接等情况下执行错误回调。
+     * 若callback为空，则表示该请求不需要监听反馈。
+     * <p>
+     * 一个请求对象只能被请求调度一次，若调度执行超过一次则抛出IllegalStateException异常。
+     *
+     * @param callback Callback with request
+     */
     @Override
     public void enqueue(@Nullable Callback<T> callback) {
         org.sheedon.mqtt.Call call;
@@ -129,6 +143,7 @@ final class OkMqttCall<T> implements Call<T> {
             if (executed) throw new IllegalStateException("Already executed.");
             executed = true;
 
+            // 同步得到call/failure，若call和failure为空，则执行创建原始调用
             call = rawCall;
             failure = creationFailure;
             if (call == null && failure == null) {
@@ -140,19 +155,23 @@ final class OkMqttCall<T> implements Call<T> {
             }
         }
 
+        // failure不为空则说明已产生错误，执行反馈动作，不再执行后续请求动作
         if (failure != null) {
             dealWithCallback(callback, OkMqttCall.this, null, failure, false);
             return;
         }
 
+        // 若状态为取消，则调度取消动作，不在执行后续请求动作
         if (canceled) {
             call.cancel();
             return;
         }
 
+        // 无响应请求
         if (callback == null) {
             call.publish();
         } else {
+            // 请求入队
             call.enqueue(new org.sheedon.mqtt.Callback() {
                 @Override
                 public void onResponse(@NonNull org.sheedon.mqtt.Call call, @NonNull org.sheedon.mqtt.Response rawResponse) {
@@ -183,7 +202,9 @@ final class OkMqttCall<T> implements Call<T> {
     }
 
     /**
-     * 处理反馈
+     * 处理反馈结果。
+     * 根据isSuccess得知该请求是否请求成功。
+     * 由callback将call和响应结果response发送给请求执行者。
      *
      * @param callback  反馈监听
      * @param call      Call
@@ -209,6 +230,12 @@ final class OkMqttCall<T> implements Call<T> {
 
     }
 
+    /**
+     * 代理创建原始调用
+     *
+     * @return org.sheedon.mqtt.Call okmqtt中的Call
+     * @throws IOException
+     */
     private org.sheedon.mqtt.Call createRawCall() throws IOException {
         org.sheedon.mqtt.Call call = callFactory.newCall(requestFactory.create(args));
         if (call == null) {
@@ -217,6 +244,13 @@ final class OkMqttCall<T> implements Call<T> {
         return call;
     }
 
+    /**
+     * 将原始响应结果转化为封装后的Response
+     *
+     * @param rawResponse 原始响应结果
+     * @return 封装响应结果
+     * @throws IOException
+     */
     private Response<T> parseResponse(org.sheedon.mqtt.Response rawResponse) throws IOException {
         ResponseBody rawBody = rawResponse.getBody();
 
@@ -230,11 +264,17 @@ final class OkMqttCall<T> implements Call<T> {
         }
     }
 
+    /**
+     * 是否已被执行
+     */
     @Override
     public boolean isExecuted() {
         return executed;
     }
 
+    /**
+     * 取消请求
+     */
     @Override
     public void cancel() {
         canceled = true;
@@ -248,6 +288,9 @@ final class OkMqttCall<T> implements Call<T> {
         }
     }
 
+    /**
+     * 是否取消请求
+     */
     @Override
     public boolean isCanceled() {
         if (canceled) {
