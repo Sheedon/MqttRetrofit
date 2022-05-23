@@ -49,7 +49,6 @@ import org.sheedon.mqtt.retrofit.mqtt.Subject;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -69,7 +68,6 @@ final class RequestFactory {
     }
 
     private final Method method;
-    private final boolean isFormEncoded;
     private final ParameterHandler<?>[] parameterHandlers;
     final boolean isKotlinSuspendFunction;
 
@@ -89,13 +87,14 @@ final class RequestFactory {
     private final String keyword;
 
     private final String charset;
+    private final FormBodyConverter formBodyConverter;
     private final boolean autoEncode;
 
     RequestFactory(Builder builder) {
         method = builder.method;
-        isFormEncoded = builder.isFormEncoded;
         parameterHandlers = builder.parameterHandlers;
         isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
+        formBodyConverter = builder.isFormEncoded ? builder.createFormBodyConverter() : null;
 
         topic = builder.topic;
         qos = builder.qos;
@@ -116,6 +115,12 @@ final class RequestFactory {
         autoEncode = builder.autoEncode;
     }
 
+    /**
+     * 通过parameterHandlers将args转化成的请求数据以构建一个请求/订阅对象。
+     * @param args 参数
+     * @return 请求对象
+     * @throws IOException
+     */
     Request create(Object[] args) throws IOException {
         ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
@@ -133,7 +138,7 @@ final class RequestFactory {
                 new RequestBuilder(topic, qos, retained,
                         timeout, timeUnit, relativePayload,
                         subscribeTopic, subscribeQos, attachRecord,
-                        subscriptionType, keyword, charset, autoEncode, isFormEncoded);
+                        subscriptionType, keyword, charset, autoEncode, formBodyConverter);
 
         if (isKotlinSuspendFunction) {
             // The Continuation is the last parameter and the handlers array contains null at that index.
@@ -147,6 +152,12 @@ final class RequestFactory {
         return requestBuilder.get().build();
     }
 
+    /**
+     * 通过parameterHandlers将args转化成的请求数据以构建一个订阅对象。
+     * @param args 参数
+     * @return 订阅对象
+     * @throws IOException
+     */
     org.sheedon.mqtt.Subscribe createSubscribe(Object[] args) throws IOException {
         ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
@@ -164,7 +175,7 @@ final class RequestFactory {
                 new RequestBuilder(topic, qos, retained,
                         timeout, timeUnit, relativePayload,
                         subscribeTopic, subscribeQos, attachRecord,
-                        subscriptionType, keyword, charset, autoEncode, isFormEncoded);
+                        subscriptionType, keyword, charset, autoEncode, formBodyConverter);
 
         if (isKotlinSuspendFunction) {
             // The Continuation is the last parameter and the handlers array contains null at that index.
@@ -376,30 +387,30 @@ final class RequestFactory {
                 Field field = (Field) annotation;
                 String name = field.value();
 
-                Class<?> rawParameterType = Utils.getRawType(type);
+//                Class<?> rawParameterType = Utils.getRawType(type);
                 gotQuery = true;
-                if (Iterable.class.isAssignableFrom(rawParameterType)) {
-                    if (!(type instanceof ParameterizedType)) {
-                        throw Utils.parameterError(method, p, rawParameterType.getSimpleName()
-                                + " must include generic type (e.g., "
-                                + rawParameterType.getSimpleName()
-                                + "<String>)");
-                    }
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-                    Converter<?, String> converter =
-                            retrofit.stringConverter(iterableType, annotations);
-                    return new ParameterHandler.Field<>(name, converter).iterable();
-                } else if (rawParameterType.isArray()) {
-                    Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-                    Converter<?, String> converter =
-                            retrofit.stringConverter(arrayComponentType, annotations);
-                    return new ParameterHandler.Field<>(name, converter).array();
-                } else {
-                    Converter<?, String> converter =
-                            retrofit.stringConverter(type, annotations);
-                    return new ParameterHandler.Field<>(name, converter);
-                }
+//                if (Iterable.class.isAssignableFrom(rawParameterType)) {
+//                    if (!(type instanceof ParameterizedType)) {
+//                        throw Utils.parameterError(method, p, rawParameterType.getSimpleName()
+//                                + " must include generic type (e.g., "
+//                                + rawParameterType.getSimpleName()
+//                                + "<String>)");
+//                    }
+//                    ParameterizedType parameterizedType = (ParameterizedType) type;
+//                    Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+//                    Converter<?, String> converter =
+//                            retrofit.stringConverter(iterableType, annotations);
+//                    return new ParameterHandler.Field<>(name, converter).iterable();
+//                } else if (rawParameterType.isArray()) {
+//                    Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+//                    Converter<?, String> converter =
+//                            retrofit.stringConverter(arrayComponentType, annotations);
+//                    return new ParameterHandler.Field<>(name, converter).array();
+//                } else {
+                Converter<?, String> converter =
+                        retrofit.stringConverter(type, annotations);
+                return new ParameterHandler.Field<>(name, converter);
+//                }
 
             } else if (annotation instanceof Body) {
                 if (gotPayload) {
@@ -424,6 +435,13 @@ final class RequestFactory {
             }
 
             return null; // Not a Retrofit annotation.
+        }
+
+        /**
+         * 创建一个表单数据转换器
+         */
+        private FormBodyConverter createFormBodyConverter() {
+            return retrofit.formBodyConverter();
         }
 
         private void validateResolvableType(int p, Type type) {

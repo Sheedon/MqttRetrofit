@@ -36,6 +36,7 @@ import org.sheedon.mqtt.ObservableFactory;
 import org.sheedon.mqtt.OkMqttClient;
 import org.sheedon.mqtt.RequestBody;
 import org.sheedon.mqtt.ResponseBody;
+import org.sheedon.mqtt.Subscribe;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -53,15 +54,14 @@ import java.util.concurrent.Executor;
 import static java.util.Collections.unmodifiableList;
 
 /**
- * Retrofit adapts a Java interface to MQTT calls/observables by using annotations on the declared methods to
- * define how requests are made. Create instances using {@linkplain Builder the builder} and pass
- * your interface to {@link #create} to generate an implementation.
+ * Retrofit 通过在声明的方法上使用注释来定义如何发出请求，从而使 Java 接口适应 MQTT 调用可观察对象。
+ * 使用 {@linkplain Builder the builder} 创建实例并将您的接口传递给 {@link #create(Class)} 以生成实现。
  *
- * <p>For example,
+ * <p>例如，
  *
  * <pre><code>
  * Retrofit retrofit = new Retrofit.Builder()
- *     .baseUrl("https://api.example.com/")
+ *     .baseUrl("mq/clouds/cmd")
  *     .addConverterFactory(GsonConverterFactory.create())
  *     .build();
  *
@@ -111,7 +111,51 @@ public class Retrofit {
     }
 
     /**
-     * 创建由{@code service}接口定义的API端点的实现。
+     * 由 {@code service} 创建接口定义的 API 端点的实现。
+     *
+     * <p>
+     * 1. 订阅主题的相对路径是从所创建接口的方法上的注解{@link org.sheedon.mqtt.retrofit.mqtt.SUBSCRIBE
+     * SUBSCRIBE}中获得的。
+     * 2. 请求消息的主题相对路径是从所创建接口的方法上的注解{@link org.sheedon.mqtt.retrofit.mqtt.TOPIC
+     * TOPIC}中获得的。
+     * 3. 对于发送mqtt消息，需要在超时时间范围内得到响应结果，可以通过从所创建接口的方法上的注解
+     * {@link org.sheedon.mqtt.retrofit.mqtt.TIMEOUT TIMEOUT}中获得超时时间，超时未接收到数据则向客户端发送超时消息。
+     * 4. 对于发送mqtt数据包，若为固定数据，则可通过从所创建接口的方法上的注解{@link org.sheedon.mqtt.retrofit.mqtt.PAYLOAD
+     * PAYLOAD}来配置。
+     * 5. 配置mqtt消息的有效载荷编码格式，可以通过从所创建接口的方法上的注解{@link org.sheedon.mqtt.retrofit.mqtt.CHARSET
+     * CHARSET}来配置。
+     * 6. 若订阅内容并不是消息主题，而是需要通过消息或部分主题进行匹配，那么可以通过创建接口的方法上的注解
+     * {@link org.sheedon.mqtt.retrofit.mqtt.KEYWORD KEYWORD}来配置。
+     *
+     * <p>方法参数可用于替换部分「订阅主题/发送消息主题/消息有效载荷」，方法是用注解
+     * {@link org.sheedon.mqtt.retrofit.mqtt.Path @Path} 配置它们。替换部分由大括号包围的标识符表示（例如，“{foo}”）。
+     * 要将项目根据{@link org.sheedon.mqtt.retrofit.mqtt.Path.type()} 类型，将内容添加到指定的配置字符串上。
+     *
+     * <p>请求的主体由 {@link org.sheedon.mqtt.retrofit.mqtt.Body @Body} 注解表示。
+     * 该对象将由 {@link Converter.Factory} 实例之一转换为请求表示。
+     * {@link RequestBody}、{@link Subscribe} 也可以用于原始表示。
+     *
+     * <p>方法注释和相应的参数注释支持替代请求正文格式:
+     *
+     * <ul>
+     *   <li>{@link org.sheedon.mqtt.retrofit.mqtt.FormEncoded @FormEncoded} -
+     *   具有由 {@link org.sheedon.mqtt.retrofit.mqtt.Field @Field} 参数注释指定的键值对的表单编码数据。
+     * </ul>
+     *
+     * <p>默认情况下，方法返回一个代表 MQTT 请求的 {@link Call}或者{@link Observable}。调用的通用参数是响应主体类型，
+     * 将由 {@link Converter.Factory} 实例之一进行转换。 {@link ResponseBody} 也可以用于原始表示。
+     * 如果您不关心正文内容，可以使用 {@link Void}。
+     *
+     * <p>例如:
+     *
+     * <pre>
+     * public interface CategoryService {
+     *   &#64;TOPIC("mq/device/data/{type}")
+     *   &#64;PAYLOAD("test")
+     *   &#64;SUBSCRIBE("mq/clouds/cmd/{type}")
+     *   Call&lt;List&lt;Item&gt;&gt; categoryList(@Path("type") String a, @Path(value = "type" type = PathType.SUBSCRIBE) String b);
+     * }
+     * </pre>
      */
     public <T> T create(final Class<T> service) {
         validateServiceInterface(service);
@@ -152,6 +196,7 @@ public class Retrofit {
             }
         }
     }
+
 
     private ServiceMethod<?> loadServiceMethod(Method method) {
         ServiceMethod<?> result = serviceMethodCache.get(method);
@@ -377,11 +422,24 @@ public class Retrofit {
         return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
     }
 
+    FormBodyConverter formBodyConverter() {
+        for (int i = 0, count = converterFactories.size(); i < count; i++) {
+            FormBodyConverter converter = converterFactories.get(i).formBodyConverter();
+            if (converter != null) {
+                //noinspection unchecked
+                return converter;
+            }
+        }
+
+        throw new IllegalArgumentException("please add FormBodyConverter");
+    }
+
     /**
      * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null}, in
      * which case callbacks should be made synchronously on the background thread.
      */
-    public @Nullable Executor callbackExecutor() {
+    public @Nullable
+    Executor callbackExecutor() {
         return callbackExecutor;
     }
 
@@ -390,12 +448,15 @@ public class Retrofit {
     }
 
     public static final class Builder {
-        private @Nullable CallFactory callFactory;
-        private @Nullable ObservableFactory observableFactory;
+        private @Nullable
+        CallFactory callFactory;
+        private @Nullable
+        ObservableFactory observableFactory;
         private String baseTopic;
         private final List<Converter.Factory> converterFactories = new ArrayList<>();
         private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
-        private @Nullable Executor callbackExecutor;
+        private @Nullable
+        Executor callbackExecutor;
         private boolean validateEagerly;
         private int timeout;
 
@@ -436,7 +497,7 @@ public class Retrofit {
         public Builder client(OkMqttClient client) {
             OkMqttClient mqttClient = Objects.requireNonNull(client, "client == null");
             this.timeout = client.getDefaultTimeout();
-            callFactory(mqttClient );
+            callFactory(mqttClient);
             observableFactory(mqttClient);
             return this;
         }
