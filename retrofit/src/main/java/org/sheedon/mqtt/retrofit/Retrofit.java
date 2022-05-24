@@ -490,9 +490,9 @@ public class Retrofit {
         }
 
         /**
-         * The MQTT client used for requests.
+         * 用于请求的 MQTT 客户端。
          * <p>
-         * This is a convenience method for calling {@link #callFactory}.
+         * 这是调用 {@link callFactory} 的便捷方法。
          */
         public Builder client(OkMqttClient client) {
             OkMqttClient mqttClient = Objects.requireNonNull(client, "client == null");
@@ -503,9 +503,9 @@ public class Retrofit {
         }
 
         /**
-         * Specify a custom call factory for creating {@link Call} instances.
+         * 指定用于创建 {@link Call} 实例的自定义调用工厂。
          * <p>
-         * Note: Calling {@link #client} automatically sets this value.
+         * 注意：调用 {@link client} 会自动设置此值。
          */
         public Builder callFactory(CallFactory factory) {
             this.callFactory = Objects.requireNonNull(factory, "CallFactory == null");
@@ -513,9 +513,8 @@ public class Retrofit {
         }
 
         /**
-         * Specify a custom call factory for creating {@link Observable} instances.
-         * <p>
-         * Note: Calling {@link #client} automatically sets this value.
+         * 指定用于创建 {@link Observable} 实例的自定义调用工厂。
+         * <p> 注意：调用 {@link client} 会自动设置此值。
          */
         public Builder observableFactory(ObservableFactory factory) {
             this.observableFactory = Objects.requireNonNull(factory, "ObservableFactory == null");
@@ -523,7 +522,7 @@ public class Retrofit {
         }
 
         /**
-         * Set the API base Topic.
+         * 设置 API 基础主题。
          */
         public Builder baseTopic(String baseTopic) {
             this.baseTopic = Objects.requireNonNull(baseTopic, "baseTopic == null");
@@ -532,7 +531,7 @@ public class Retrofit {
 
 
         /**
-         * Add converter factory for serialization and deserialization of objects.
+         * 为对象的序列化和反序列化添加转换器工厂。
          */
         public Builder addConverterFactory(Converter.Factory factory) {
             converterFactories.add(Objects.requireNonNull(factory, "factory == null"));
@@ -540,8 +539,7 @@ public class Retrofit {
         }
 
         /**
-         * Add a call adapter factory for supporting service method return types other than {@link
-         * Call}.
+         * 添加调用适配器工厂以支持 {@link Call} 以外的服务方法返回类型。
          */
         public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
             callAdapterFactories.add(Objects.requireNonNull(factory, "factory == null"));
@@ -549,11 +547,9 @@ public class Retrofit {
         }
 
         /**
-         * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
-         * your service method.
-         * <p>
-         * Note: {@code executor} is not used for {@linkplain #addCallAdapterFactory custom method
-         * return types}.
+         * 从您的服务方法返回 {@link Call} 时调用 {@link Callback} 方法的执行程序，
+         * 或者是{@link Observable} 时调用 {@link Consumer}、{@link Subscribe}、{@link FullConsumer}。
+         * <p> 注意：{@code executor} 不用于 {@linkplain addCallAdapterFactory 自定义方法返回类型}。
          */
         public Builder callbackExecutor(Executor executor) {
             this.callbackExecutor = Objects.requireNonNull(executor, "executor == null");
@@ -561,22 +557,21 @@ public class Retrofit {
         }
 
         /**
-         * Returns a modifiable list of call adapter factories.
+         * 返回调用适配器工厂的可修改列表。
          */
         public List<CallAdapter.Factory> callAdapterFactories() {
             return this.callAdapterFactories;
         }
 
         /**
-         * Returns a modifiable list of converter factories.
+         * 返回可修改的转换器工厂列表。
          */
         public List<Converter.Factory> converterFactories() {
             return this.converterFactories;
         }
 
         /**
-         * When calling {@link #create} on the resulting {@link Retrofit} instance, eagerly validate
-         * the configuration of all methods in the supplied interface.
+         * 在生成的 {@link Retrofit} 实例上调用 {@link create} 时，急切地验证所提供接口中所有方法的配置。
          */
         public Builder validateEagerly(boolean validateEagerly) {
             this.validateEagerly = validateEagerly;
