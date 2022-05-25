@@ -103,7 +103,7 @@ public interface Converter<F, T> {
          */
         public @Nullable
         FormBodyConverter formBodyConverter() {
-            return new FormBody.Builder();
+            return null;
         }
 
         /**

@@ -431,7 +431,7 @@ public class Retrofit {
             }
         }
 
-        throw new IllegalArgumentException("please add FormBodyConverter");
+        return new FormBody.Builder();
     }
 
     /**
