@@ -117,6 +117,7 @@ final class RequestFactory {
 
     /**
      * 通过parameterHandlers将args转化成的请求数据以构建一个请求/订阅对象。
+     *
      * @param args 参数
      * @return 请求对象
      * @throws IOException
@@ -154,6 +155,7 @@ final class RequestFactory {
 
     /**
      * 通过parameterHandlers将args转化成的请求数据以构建一个订阅对象。
+     *
      * @param args 参数
      * @return 订阅对象
      * @throws IOException
@@ -262,9 +264,9 @@ final class RequestFactory {
                 topic = baseTopic + topic;
             }
 
-            if (subscribeTopic == null || subscribeTopic.equals("")) {
+            if (subscribeTopic != null && subscribeTopic.equals("")) {
                 subscribeTopic = baseTopic;
-            } else if (!subscribeReplace) {
+            } else if (subscribeTopic != null && !subscribeReplace) {
                 subscribeTopic = baseTopic + subscribeTopic;
             }
 
