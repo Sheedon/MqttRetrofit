@@ -33,4 +33,11 @@ public interface FormBodyConverter {
      * 将添加的表单数据转化为String类型
      */
     String build();
+
+
+    /**
+     * 克隆出一个自己
+     * @return 表单数据转化者
+     */
+    FormBodyConverter clone();
 }

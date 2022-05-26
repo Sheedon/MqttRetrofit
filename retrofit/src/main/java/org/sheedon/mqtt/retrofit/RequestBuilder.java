@@ -105,7 +105,7 @@ public class RequestBuilder {
         this.charset = charset;
         this.autoEncode = autoEncode;
 
-        this.formBuilder = formBuilder;
+        this.formBuilder = formBuilder == null ? null : formBuilder.clone();
 
         this.requestBuilder = new Request.Builder();
         this.subscribeBuilder = new Subscribe.Builder();

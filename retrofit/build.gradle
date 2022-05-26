@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 9
         versionName "2.0"
 
@@ -44,7 +44,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
 
 //    implementation 'com.github.Sheedon:okmqtt:2.1.0-alpha-1'
-    implementation 'org.sheedon.mqtt:dispatcher:2.1.0-SNAPSHOT'
+    api 'org.sheedon.mqtt:dispatcher:2.1.0-SNAPSHOT'
 }
 
 //apply from: '../script/gradle-jcenter-push.gradle'

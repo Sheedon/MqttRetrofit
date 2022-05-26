@@ -51,6 +51,8 @@ class FormBody(
         override fun build(): String {
             return FormBody(names, values).convertToString()
         }
+
+        override fun clone() = Builder()
     }
 
 }

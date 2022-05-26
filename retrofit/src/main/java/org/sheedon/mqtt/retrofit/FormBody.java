@@ -88,5 +88,10 @@ final class FormBody {
         public String build() {
             return new FormBody(names, values).convertToString();
         }
+
+        @Override
+        public FormBodyConverter clone() {
+            return new Builder();
+        }
     }
 }
