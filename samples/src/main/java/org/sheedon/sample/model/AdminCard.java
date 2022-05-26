@@ -1,4 +1,4 @@
-package org.sheedon.demo;
+package org.sheedon.sample.model;
 
 /**
  * 管理员卡片

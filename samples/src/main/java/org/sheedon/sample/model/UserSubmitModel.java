@@ -1,4 +1,4 @@
-package org.sheedon.demo;
+package org.sheedon.sample.model;
 
 /**
  * @Description: java类作用描述

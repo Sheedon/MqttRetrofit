@@ -1,4 +1,4 @@
-package org.sheedon.demo;
+package org.sheedon.sample.model;
 
 import java.util.ArrayList;
 import java.util.List;
