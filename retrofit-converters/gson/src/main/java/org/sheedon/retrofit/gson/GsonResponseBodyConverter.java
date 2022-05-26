@@ -13,34 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.sheedon.mqtt.retrofit.converters;
+package org.sheedon.retrofit.gson;
 
-import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
 
 import org.sheedon.mqtt.ResponseBody;
 import org.sheedon.mqtt.retrofit.Converter;
 
-import java.lang.reflect.Type;
+import java.io.IOException;
 
-/**
- * 反馈内容Gson解析转化器
- *
- * @Author: sheedon
- * @Email: sheedonsun@163.com
- * @Date: 2020/2/24 22:42
- */
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
+    private final TypeAdapter<T> adapter;
 
-    private final Gson gson;
-    private final Type type;
-
-    GsonResponseBodyConverter(Gson gson, Type type) {
-        this.gson = gson;
-        this.type = type;
+    GsonResponseBodyConverter(TypeAdapter<T> adapter) {
+        this.adapter = adapter;
     }
 
     @Override
-    public T convert(ResponseBody value) {
-        return gson.fromJson(value.getData(), type);
+    public T convert(ResponseBody value) throws IOException {
+        return adapter.fromJson(value.getData());
     }
 }
