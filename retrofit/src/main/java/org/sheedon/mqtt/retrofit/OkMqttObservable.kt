@@ -122,7 +122,12 @@ internal class OkMqttObservable<T> constructor(
      */
     @Throws(IOException::class)
     private fun createRawObservable(): org.sheedon.mqtt.Observable {
-        return observableFactory.newObservable(requestFactory.create(args))
+        val count = args.filterIsInstance<org.sheedon.mqtt.Subscribe>().count()
+        return if (count > 0) {
+            observableFactory.newObservable(requestFactory.createSubscribe(args))
+        } else {
+            observableFactory.newObservable(requestFactory.create(args))
+        }
     }
 
     /**
@@ -296,7 +301,7 @@ internal class OkMqttObservable<T> constructor(
         val (observable, failure) = createRealObservable()
         // 若错误内容不为空，则直接反馈错误
         if (failure != null) {
-            callback?.onFailure(this@OkMqttObservable,failure)
+            callback?.onFailure(this@OkMqttObservable, failure)
             return
         }
 
