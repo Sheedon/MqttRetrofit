@@ -1,18 +1,16 @@
 # MqttRetrofit
 
+```tex
+在 Android 上使用的MQTT客户端，用于请求订阅结构改造。
 ```
-MQTT client used on Android to request subscription structure changes.
-```
 
-[中文](README_CN.md)
+[English](README.md)
 
 
 
-## How to use
+## 使用方式
 
-#### Step 1: Add the JitPack repository to your build file
-
-Add it in your root build.gradle at the end of repositories:
+#### 第一步：将 JitPack 存储库添加到您的构建文件中
 
 ```groovy
 allprojects {
@@ -23,9 +21,7 @@ allprojects {
 }
 ```
 
-
-
-#### Step 2: Add core dependencies
+#### 第二步：添加核心依赖
 
 ```groovy
 dependencies {
@@ -33,11 +29,9 @@ dependencies {
 }
 ```
 
+#### 第三步：构建请求，监听结果
 
-
-#### Step 3：Build the request and listen for results
-
-1. Retrofit turns your MQTT API into a Java interface.
+1. 改造将您的 MQTT API转换为Java接口。
 
 ```java
 public interface GitHubService {
@@ -52,7 +46,7 @@ public interface GitHubService {
 
 
 
-2. The `Retrofit` class generates an implementation of the `GitHubService` interface.
+2. Retrofit 类生成 GitHubService 接口的实现。
 
 ```java
 Retrofit retrofit = new Retrofit.Builder()
@@ -64,7 +58,7 @@ GitHubService service = retrofit.create(GitHubService.class);
 
 
 
-3. Each `Call` or `Observable` from the created `GitHubService` can make an asynchronous MQTT request to the remote webserver or subscribe to the remote webserver.
+3. 每个来自已创建GitHubService的调用都可以向远程服务器发出异步的MQTT请求，或订阅MQTT消息。
 
 ```java
 // 将接口传入retrofit中，进行动态代理
