@@ -8,7 +8,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 
 /**
- * 参数类型
+ * Define where {@link Path} replaces value, including TOPIC/SUBSCRIBE/PAYLOAD/KEYWORD.
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com

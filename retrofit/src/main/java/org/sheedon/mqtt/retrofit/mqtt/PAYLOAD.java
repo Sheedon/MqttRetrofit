@@ -23,7 +23,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * mqtt message payload
+ * Constructs a message with the specified byte array as a payload,
+ * and all other values set to defaults.
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com

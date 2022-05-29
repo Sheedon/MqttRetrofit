@@ -23,8 +23,15 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * request body by mqtt payload
- * 例如 Call<> getManagerList(@Body UserSubmitModel body);
+ * Use this annotation on a service method param when you want to directly control the request body
+ * of a publish request.
+ * The object will be serialized using the {@link Retrofit Retrofit} instance {@link Converter
+ * Converter} and the result will be set directly as the request body.
+ * <p>
+ * For example
+ * <pre><code>
+ * Call&lt;RspModel&lt;User&gt;&gt; getManagerList(@Body UserSubmitModel body);
+ * </code></pre>
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com

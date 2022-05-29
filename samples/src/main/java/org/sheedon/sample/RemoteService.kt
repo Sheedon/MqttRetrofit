@@ -5,6 +5,7 @@ import org.sheedon.mqtt.retrofit.Call
 import org.sheedon.mqtt.retrofit.Observable
 import org.sheedon.mqtt.retrofit.mqtt.*
 import org.sheedon.sample.factory.RetrofitClient
+import org.sheedon.sample.model.AdminCard
 import org.sheedon.sample.model.User
 
 /**
@@ -31,6 +32,15 @@ internal interface RemoteService {
     ): Call<Void>
 
 
+    @FormEncoded
+    @TOPIC("user/addUserAndOrg")
+    @CHARSET("GBK", autoEncode = false)
+    fun addUserAndOrg(
+        @Field("userName") name: String,
+        @Field("org") org: String
+    ): Call<Void>
+
+
     @TOPIC("user/{id}")
     @PAYLOAD("test-{name}")
     fun notifyUser(
@@ -43,6 +53,12 @@ internal interface RemoteService {
     @SUBSCRIBE("cmd/user")
     fun getUserById(
         @Path("id") id: String
+    ): Call<User>
+
+    @TOPIC("user/{id}")
+    @SUBSCRIBE("cmd/user")
+    fun addUser(
+        @Body adminCard: AdminCard
     ): Call<User>
 
 

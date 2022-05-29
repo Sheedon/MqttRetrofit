@@ -15,19 +15,33 @@
  */
 package org.sheedon.mqtt.retrofit.mqtt;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Type;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * mqtt payload field, the key used to set the content
+ * Named pair for a form-encoded request.
  *
- * 例如
- * Call<> getManagerList(@Field("type") String type,
- *                       @Field("upStartTime") String upStartTime);
+ * <p>Values are converted to strings using {@link Retrofit#stringConverter(Type, Annotation[])} (or
+ * {@link Object#toString()}, if no matching string converter is installed) and then form payload
+ * encoded. {@code null} values are ignored. Passing a {@link java.util.List List} or array will
+ * result in a field pair for each non-{@code null} item.
+ *
+ * <p>Simple Example:
+ *
+ * <pre><code>
+ * &#64;FormUrlEncoded
+ * &#64;TOPIC("user/test")
+ * Call&lt;ResponseBody&gt; example(
+ *     &#64;Field("name") String name,
+ *     &#64;Field("occupation") String occupation);
+ * </code></pre>
+ * <p>
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -38,6 +52,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Field {
 
-    /** The query parameter name. */
+    /**
+     * The query parameter name.
+     */
     String value();
 }

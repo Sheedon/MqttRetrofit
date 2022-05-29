@@ -23,13 +23,19 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Enable Field
- * For example
- * @FormEncoded
- * Call<> getManagerList(@Field("type") String type,
- *                       @Field("upStartTime") String upStartTime);
+ * Denotes that the request body will use form URL encoding. Fields should be declared as parameters
+ * and annotated with {@link Field @Field}.
  *
- * 要使用 Field，必须设置FormEncoded，才会去解析Field内容
+ * <p>Simple Example:
+ *
+ * <pre><code>
+ * &#64;FormUrlEncoded
+ * &#64;TOPIC("user/test")
+ * Call&lt;ResponseBody&gt; example(
+ *     &#64;Field("name") String name,
+ *     &#64;Field("occupation") String occupation);
+ * </code></pre>
+ * <p>
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com

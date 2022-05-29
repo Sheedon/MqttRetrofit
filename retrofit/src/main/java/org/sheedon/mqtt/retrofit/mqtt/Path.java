@@ -15,20 +15,28 @@
  */
 package org.sheedon.mqtt.retrofit.mqtt;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Type;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Path content, replace the content specified in TOPIC
+ * Named replacement in a TOPIC/KEYWORD/SUBSCRIBE/PAYLOAD path segment. Values are converted to strings
+ * using {@link Retrofit#stringConverter(Type, Annotation[])} (or {@link Object#toString()}, if no matching
+ * string converter is installed).
  *
- * @TOPIC("yh_classify/device/recyclable/data/{deviceId}}") Call<> getManagerList(@Path("deviceId") String deviceId, @Field("type") String type,
- * @Field("upStartTime") String upStartTime);
+ * <p>Simple example:
+ *
+ * <pre><code>
+ * &#64;TOPIC("/image/{id}")
+ * Call&lt;ResponseBody&gt; example(@Path("id") int id);
+ * </code></pre>
  * <p>
- * The deviceId in path replaces the deviceId in TOPIC
+ *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
  * @Date: 2020/2/23 10:35

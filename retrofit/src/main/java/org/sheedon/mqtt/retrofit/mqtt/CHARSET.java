@@ -1,7 +1,13 @@
 package org.sheedon.mqtt.retrofit.mqtt;
 
 /**
- * Encoding format
+ * Use this annotation on a service method param when you want to change payload encoding format
+ * of a publish request.
+ * <p>
+ * For example:
+ *
+ * @CHARSET("GBK", autoEncode = false)
+ * Call<Model> getManagerList(@Body UserSubmitModel body);
  *
  * @Author: sheedon
  * @Email: sheedonsun@163.com
@@ -15,10 +21,9 @@ public @interface CHARSET {
     String value() default "";
 
     /**
-     * Whether the messaging engine should keep publish messages.
-     * Sending a message with reserved set to `true` and using an empty byte array as payload,
-     * e.g. `new byte[0]` will clear the reserved message from the server.
-     * The default value is false.
+     * Whether to set whether to use {@link org.sheedon.mqtt.OkMqttClient.Builder.charsetName(String)}
+     * to configure the encoding format of mqtt messages, if {@link value()} is not set,
+     * and {@link autoEncode()} is false , the encoding format is not changed.
      */
-    boolean autoEncode() default false;
+    boolean autoEncode() default true;
 }

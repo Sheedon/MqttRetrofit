@@ -1,3 +1,4 @@
 rootProject.name='MqttRetrofit'
-include ':app'
-include ':mqtt-retrofit'
+include ':samples'
+include ':retrofit'
+include ':retrofit-converters:gson'
