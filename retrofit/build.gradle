@@ -41,10 +41,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation 'com.google.code.gson:gson:2.8.9'
-
     implementation 'com.github.Sheedon:okmqtt:2.1.0-alpha-2.1'
 //    api 'org.sheedon.mqtt:dispatcher:2.1.0-SNAPSHOT'
 }
 
-//apply from: '../script/gradle-jcenter-push.gradle'
+apply from: '../script/gradle-jcenter-push.gradle'
