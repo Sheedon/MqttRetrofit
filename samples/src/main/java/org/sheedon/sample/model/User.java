@@ -47,6 +47,16 @@ public class User {
         return user;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "loginName='" + loginName + '\'' +
+                ", password='" + password + '\'' +
+                ", test=" + test +
+                ", tests=" + tests +
+                '}';
+    }
+
     public static class Test {
         private String test;
 

@@ -1,6 +1,8 @@
 package org.sheedon.sample
 
+import org.sheedon.mqtt.Subscribe
 import org.sheedon.mqtt.retrofit.Call
+import org.sheedon.mqtt.retrofit.Observable
 import org.sheedon.mqtt.retrofit.mqtt.*
 import org.sheedon.sample.factory.RetrofitClient
 import org.sheedon.sample.model.User
@@ -33,7 +35,7 @@ internal interface RemoteService {
     @PAYLOAD("test-{name}")
     fun notifyUser(
         @Path("id") id: String,
-        @Path("name" , type = PathType.PAYLOAD) name: String
+        @Path("name", type = PathType.PAYLOAD) name: String
     ): Call<Void>
 
 
@@ -42,4 +44,11 @@ internal interface RemoteService {
     fun getUserById(
         @Path("id") id: String
     ): Call<User>
+
+
+    @SUBSCRIBE("cmd/user")
+    fun listenUser(): Observable<User>
+
+
+    fun listenArray(@Body subscribe: Subscribe): Observable<User>
 }

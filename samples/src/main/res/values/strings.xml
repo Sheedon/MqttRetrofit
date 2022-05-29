@@ -10,9 +10,9 @@
 
 
     <string name="label_publish_message">simple publish message</string>
-    <string name="label_subscribe_topic">subscribe topic</string>
-    <string name="label_request_and_response">request and response</string>
-    <string name="label_subscribe_topic_array">subscribe topic array</string>
+    <string name="label_subscribe_topic">simple subscribe topic</string>
+    <string name="label_request_and_response">simple request and response</string>
+    <string name="label_subscribe_topic_array">simple subscribe topic array</string>
 
     <string name="label_publish">publish</string>
     <string name="label_subscribe">subscribe</string>
@@ -27,4 +27,5 @@
     </string>
 
     <string name="hint_publish_message">Send a simple mqtt message</string>
+    <string name="hint_request_response">Send a simple mqtt message and receive response from mqtt</string>
 </resources>

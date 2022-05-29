@@ -11,9 +11,9 @@
 
 
     <string name="label_publish_message">简易发布消息</string>
-    <string name="label_subscribe_topic">订阅主题</string>
-    <string name="label_request_and_response">请求和响应</string>
-    <string name="label_subscribe_topic_array">订阅主题数组</string>
+    <string name="label_subscribe_topic">简易订阅主题</string>
+    <string name="label_request_and_response">简易版请求响应</string>
+    <string name="label_subscribe_topic_array">简易订阅主题数组</string>
 
     <string name="label_publish">发布</string>
     <string name="label_subscribe">订阅</string>
@@ -27,4 +27,5 @@
     </string>
 
     <string name="hint_publish_message">发送一个简易的mqtt消息</string>
+    <string name="hint_request_response">发送一个简易的mqtt消息，并且接收对应的mqtt消息响应</string>
 </resources>
